@@ -179,11 +179,14 @@ def amwg_table(adf):
                 warnings.warn(errmsg)
                 continue
 
+
             #TEMPORARY:  For now, make sure only one file exists:
             if len(ts_files) != 1:
-                errmsg =  "Currently the AMWG table script can only handle one time series file per variable."
+                errmsg =  "WARNING: Currently the AMWG table script can only handle one time series file per variable."
                 errmsg += " Multiple files were found for the variable '{}'".format(var)
-                raise AdfError(errmsg)
+
+            cam_ts_data = xr.open_dataset(ts_files[0], decode_times=True)
+
 
             #Load model data from file:
             data = _load_data(ts_files[0], var)
@@ -252,6 +255,7 @@ def amwg_table(adf):
 
     #Notify user that script has ended:
     print("...AMWG variable table has been generated successfully.")
+    print(output_html_file)
 
 ##################
 # Helper functions

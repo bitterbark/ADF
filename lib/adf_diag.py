@@ -273,6 +273,8 @@ class AdfDiag(AdfObs):
         then it must be required.
         """
 
+#        print("DRB get_basic_info sending in self.__basic_info")
+#        print(self.__basic_info)
         return self.read_config_var(var_str,
                                     conf_dict=self.__basic_info,
                                     required=required)
@@ -332,6 +334,26 @@ class AdfDiag(AdfObs):
         return self.read_config_var(var_str,
                                     conf_dict=self.__cam_bl_climo_info,
                                     required=required)
+
+    #########
+    #Variable setting functions (over-rides yaml file, for use in jupyter notebook)
+    #########
+
+    def set_basic_info(self, var_str, varsetting):
+        """
+        Sets the config variable in 'diag_basic_info'
+        """
+        #DRB try pulling out the diag_basic_info first and then send it(?)
+#        self._conf_dict["diag_basic_info"]
+#        then use read_config_var to extract basic info and see if its there
+
+        self.update_config_var(var_str,
+                                      varsetting,
+                                      conf_dict=self.__config_dict["diag_basic_info"])
+
+        return self.update_config_var(var_str,
+                                      varsetting,
+                                      conf_dict=self.__basic_info)
 
     #########
     #Script-running functions
