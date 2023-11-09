@@ -17,6 +17,7 @@ import os.path
 import glob
 import subprocess
 import multiprocessing as mp
+import copy
 
 import importlib
 
@@ -192,6 +193,14 @@ class AdfDiag(AdfWeb):
 
         #Add plotting script names:
         self.__plotting_scripts = self.read_config_var('plotting_scripts')
+
+    # Create property needed to return "plotting_scripts" variable to user:
+    @property
+    def plotting_scripts(self):
+        """Return a copy of the '__plotting_scripts' string list to user if requested."""
+        #Note that a copy is needed in order to avoid having a script mistakenly
+        #modify this variable:
+        return copy.copy(self.__plotting_scripts)
 
     #########
     #Variable extraction functions
@@ -401,6 +410,9 @@ class AdfDiag(AdfWeb):
             hist_str = 'cam.h0'
         #End if
 
+        # get info about variable defaults
+        res = self.variable_defaults
+
         #Loop over cases:
         for case_idx, case_name in enumerate(case_names):
 
@@ -417,9 +429,6 @@ class AdfDiag(AdfWeb):
             #Extract start and end year values:
             start_year = start_years[case_idx]
             end_year   = end_years[case_idx]
-
-            print(type(start_year))
-            print(type(end_year))
 
             #Create path object for the CAM history file(s) location:
             starting_location = Path(cam_hist_locs[case_idx])
@@ -535,12 +544,24 @@ class AdfDiag(AdfWeb):
 
             #Loop over CAM history variables:
             list_of_commands = []
-            for var in self.diag_var_list:
+            vars_to_derive = []
+            #create copy of var list that can be modified for derivable variables
+            diag_var_list = self.diag_var_list
+            for var in diag_var_list:
                 if var not in hist_file_var_list:
-                    msg = f"WARNING: {var} is not in the file {hist_files[0]}."
-                    msg += " No time series will be generated."
-                    print(msg)
-                    continue
+                    vres = res.get(var, {})
+                    if "derivable_from" in vres:
+                        constit_list = vres['derivable_from']
+                        for constit in constit_list:
+                            if constit not in diag_var_list:
+                                diag_var_list.append(constit)
+                        vars_to_derive.append(var)
+                        continue
+                    else:
+                        msg = f"WARNING: {var} is not in the file {hist_files[0]}."
+                        msg += " No time series will be generated."
+                        print(msg)
+                        continue
 
                 #Check if variable has a "lev" dimension according to first file:
                 has_lev = bool('lev' in hist_file_ds[var].dims)
@@ -617,6 +638,9 @@ class AdfDiag(AdfWeb):
             #Now run the "ncrcat" subprocesses in parallel:
             with mp.Pool(processes=self.num_procs) as mpool:
                 _ = mpool.map(call_ncrcat, list_of_commands)
+
+            if vars_to_derive:
+                self.derive_variables(vars_to_derive=vars_to_derive,ts_dir=ts_dir[case_idx])
             #End with
 
         #End cases loop
@@ -940,8 +964,6 @@ class AdfDiag(AdfWeb):
         print('For CVDP information visit: https://www.cesm.ucar.edu/working_groups/CVC/cvdp/')
         print('   ')
 
-
-
     #########
 
     def setup_run_mdtf(self):
@@ -1006,5 +1028,30 @@ class AdfDiag(AdfWeb):
             _ = subprocess.Popen([mdtf_exe], shell=True, stdout=subout, stderr=subout, close_fds=True)
 
 
+    #########
+
+    def derive_variables(self,vars_to_derive=None,ts_dir=None):
+
+        """
+        Derive variables acccording to steps given here.  Since derivations will depend on the 
+        variable, each variable to derive will need its own set of steps below.
+        """
+
+        for var in vars_to_derive:
+            if var == "PRECT":
+                 # PRECT can be found by simply adding PRECL and PRECC
+                 # grab file names for the PRECL and PRECC files from the case ts directory
+                 if glob.glob(os.path.join(ts_dir,"*PRECC*")) and glob.glob(os.path.join(ts_dir,"*PRECL*")):
+                     constit_files=sorted(glob.glob(os.path.join(ts_dir,"*PREC*")))
+                 else:
+                     ermsg = "PRECC and PRECL were not both present; PRECT cannot be calculated."
+                     ermsg += " Please remove PRECT from diag_var_list or find the relevant CAM files."
+                     raise FileNotFoundError(ermsg)
+                 # create new file name for PRECT
+                 prect_file = constit_files[0].replace('PRECC','PRECT')
+                 # append PRECC to the file containing PRECL
+                 os.system(f"ncks -A -v PRECC {constit_files[0]} {constit_files[1]}")
+                 # create new file with the sum of PRECC and PRECL
+                 os.system(f"ncap2 -s 'PRECT=(PRECC+PRECL)' {constit_files[1]} {prect_file}")
 
 ###############

@@ -1,0 +1,33 @@
+{
+    "MODEL_DATA_ROOT": "/glade/work/bundy/mdtf/inputdata/model/",
+    "OBS_DATA_ROOT": "/glade/work/bundy/mdtf/inputdata/obs_data",
+    "OUTPUT_DIR": "/glade/scratch/bundy/ADF/plots/mdtf",
+    "WORKING_DIR": "/glade/scratch/bundy/ADF/plots/mdtf",
+    "case_list": [
+        {
+            "CASENAME": "b.e23_alpha16b.BLT1850.ne30_t232.049",
+            "FIRSTYR": 1,
+            "LASTYR": 21,
+            "convention": "CESM",
+            "model": "CESM"
+        }
+    ],
+    "conda_env_root": "/glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412//_MDTF_base",
+    "conda_root": "/glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/",
+    "data_manager": "Local_File",
+    "data_type": "single_run",
+    "dry_run": false,
+    "environment_manager": "Conda",
+    "make_variab_tar": false,
+    "mdtf_codebase_loc": "/glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF",
+    "mdtf_input_settings_filename": "mdtf_input.json",
+    "mdtf_run": true,
+    "overwrite": true,
+    "pod_list": [
+        "MJO_suite"
+    ],
+    "save_nc": false,
+    "save_ps": false,
+    "test_mode": false,
+    "verbose": 3
+}

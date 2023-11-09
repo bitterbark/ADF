@@ -1,0 +1,168 @@
+=== Starting /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/mdtf_framework.py
+
+Running framework in single-run mode 
+PACKAGE SETTINGS:
+  case_list(0): 
+    CASENAME: b.e23_alpha16b.BLT1850.ne30_t232.049
+    FIRSTYR: 1
+    LASTYR: 21
+    convention: CESM
+    model: CESM
+    experiment: ""
+    pod_list: 
+      MJO_suite
+  paths: 
+    CODE_ROOT: /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics
+    OBS_DATA_ROOT: /glade/work/bundy/mdtf/inputdata/obs_data
+    MODEL_DATA_ROOT: /glade/work/bundy/mdtf/inputdata/model/
+    WORKING_DIR: /glade/scratch/bundy/ADF/plots/mdtf
+    OUTPUT_DIR: /glade/scratch/bundy/ADF/plots/mdtf
+    conda_root: /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/
+    conda_env_root: /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412//_MDTF_base
+    TEMP_DIR_ROOT: /glade/scratch/bundy/ADF/plots/mdtf
+  settings: 
+    convention: CMIP
+    data_manager: Local_File
+    data_type: single_run
+    environment_manager: Conda
+    runtime_manager: subprocess
+    file_transfer_timeout: 300
+    output_manager: html
+    overwrite: true
+    pods: all
+  env_vars: 
+    RGB: /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/shared/rgb
+    MPLBACKEND: Agg
+###core.py MDTFFramework: initializing case 'b.e23_alpha16b.BLT1850.ne30_t232.049'.
+### MDTFFramework: requesting data for case 'b.e23_alpha16b.BLT1850.ne30_t232.049'.
+Starting data file search at /glade/work/bundy/mdtf/inputdata/model/:
+  Couldn't parse path 'f.e20.FHIST.f09_f09.cesm2_1_cam5.001/f.e20.FHIST.f09_f09.cesm2_1_cam5.day.PRECT.nc'.
+  Couldn't parse path 'ERA5/mon/ERA5_nino_DJF.nc'.
+  Couldn't parse path 'ERA5/mon/ERA5_climo_DJF.nc'.
+  Couldn't parse path 'ERA5/mon/ERA5_nina_DJF.nc'.
+  Couldn't parse path 'ERA5/mon/sst_HadOIBl_bc_0.9x1.25_1850_2020_c210521.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/mon/bhist.e213cosp217.f09_g17.mdtf_v3.1993.Z3.mon_orig.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/day_stripped/bhist.e213cosp217.f09_g17.mdtf_v3.1993.U850.day.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/day_stripped/bhist.e213cosp217.f09_g17.mdtf_v3.1993.FLNT.day.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/day_stripped/bhist.e213cosp217.f09_g17.mdtf_v3.1993.U200.day.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/day_stripped/bhist.e213cosp217.f09_g17.mdtf_v3.1993.FLUT.day.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1993/day_stripped/bhist.e213cosp217.f09_g17.mdtf_v3.1993.PRECT.day.nc'.
+  Couldn't parse path 'QBOi.EXP1.AMIP.001/1hr/test.nc'.
+  Couldn't parse path 'f.e20.FHIST.f09_f09.cesm2_1.001/f.e20.FHIST.f09_f09.cesm2_1.day.PRECT.nc'.
+  Couldn't parse path 'f.e20.F2000.f09_f09.cesm2_1_alpha01d/mon/temp.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/1-hr/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h4.FLUT.1995010100000-1995010100000.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/1-hr/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h4.OMEGA.1995010100000-1995010100000.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/1-hr/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h4.FLUTC.1995010100000-1995010100000.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/6-hr/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h2.OMEGA.1995010100000-1995010100000.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/month/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h0.FLUTC.199501-201412.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/month/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h0.FLUT.199501-201412.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/month/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h0.PRECT.199501-201412.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/month/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h0.OMEGA.199501-201412.nc'.
+  Couldn't parse path 'bhist.e213cosp217.f09_g17.mdtf_v3.1995/month/bhist.e213cosp217.f09_g17.mdtf_v3.1995.h0.OMEGAT.199501-201412.nc'.
+Directory crawl found 155 files.
+Querying <FLUT> (toa_outgoing_longwave_flux).
+Querying <PRECT> (precipitation_rate).
+Querying <U200> (eastward_wind @ 200 hPa).
+Querying <U850> (eastward_wind @ 850 hPa).
+Querying <V200> (northward_wind @ 200 hPa).
+Querying <V850> (northward_wind @ 850 hPa).
+WARNING: /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/data_manager.py:585: FutureWarning: Passing 'suffixes' which cause duplicate columns {'sample_dataset_x'} in the result is deprecated and will raise a MergeError in a future version.
+  expt_df = pd.merge(
+
+WARNING: /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/data_manager.py:585: FutureWarning: Passing 'suffixes' which cause duplicate columns {'sample_dataset_x'} in the result is deprecated and will raise a MergeError in a future version.
+  expt_df = pd.merge(
+
+Fetching <#hU2W:MJO_suite.rlut> (='FLUT' @ 1day).
+Fetching <#hU5n:MJO_suite.pr> (='PRECT' @ 1day).
+Fetching <#hU7T:MJO_suite.u200> (='U200' @ 1day, 200 hPa).
+Fetching <#hUam:MJO_suite.u850> (='U850' @ 1day, 850 hPa).
+Fetching <#hUcR:MJO_suite.v200> (='V200' @ 1day, 200 hPa).
+Fetching <#hUfj:MJO_suite.v850> (='V850' @ 1day, 850 hPa).
+Preprocessing <#hU2W:MJO_suite.rlut> (='FLUT' @ 1day).
+No standard_name for 'FLUT' found in dataset; setting to 'toa_outgoing_longwave_flux'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hU2W:MJO_suite.rlut> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hU2W:MJO_suite.rlut>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.rlut.day.nc
+Preprocessing <#hU5n:MJO_suite.pr> (='PRECT' @ 1day).
+No standard_name for 'PRECT' found in dataset; setting to 'precipitation_rate'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hU5n:MJO_suite.pr> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hU5n:MJO_suite.pr>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.pr.day.nc
+Preprocessing <#hU7T:MJO_suite.u200> (='U200' @ 1day, 200 hPa).
+No standard_name for 'U200' found in dataset; setting to 'eastward_wind'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hU7T:MJO_suite.u200> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hU7T:MJO_suite.u200>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.u200.day.nc
+Preprocessing <#hUam:MJO_suite.u850> (='U850' @ 1day, 850 hPa).
+No standard_name for 'U850' found in dataset; setting to 'eastward_wind'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hUam:MJO_suite.u850> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hUam:MJO_suite.u850>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.u850.day.nc
+Preprocessing <#hUcR:MJO_suite.v200> (='V200' @ 1day, 200 hPa).
+No standard_name for 'V200' found in dataset; setting to 'northward_wind'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hUcR:MJO_suite.v200> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hUcR:MJO_suite.v200>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.v200.day.nc
+Preprocessing <#hUfj:MJO_suite.v850> (='V850' @ 1day, 850 hPa).
+No standard_name for 'V850' found in dataset; setting to 'northward_wind'.
+No standard_name for 'time' found in dataset; setting to 'time'.
+No standard_name for 'time_bnds' found in dataset; setting to 'time'.
+No units for 'time_bnds' found in dataset; setting to 'days since 0001-01-01 00:00:00'.
+No standard_name for 'lat' found in dataset; setting to 'latitude'.
+No standard_name for 'lon' found in dataset; setting to 'longitude'.
+Cropped date range of <#hUfj:MJO_suite.v850> from '0001-01-01 -- 0022-01-15' to '0001-01-01 -- 0022-01-01'.
+Converted units on <#hUfj:MJO_suite.v850>.
+Writing 1617 mb to $WK_DIR/MJO_suite/day/b.e23_alpha16b.BLT1850.ne30_t232.049.v850.day.nc
+### MDTFFramework: running case 'b.e23_alpha16b.BLT1850.ne30_t232.049'.
+ERROR: run_shell_command on /glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/conda/conda_init.sh /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/ (pid 4748) exit status=1:
+ERROR: search for conda executable failed ()
+
+
+CRITICAL: **********************************************************************
+Uncaught exception:
+Traceback (most recent call last):
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/environment_manager.py", line 242, in __init__
+    conda_info = util.run_shell_command(
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/util/processes.py", line 185, in run_shell_command
+    raise exceptions.MDTFCalledProcessError(
+src.util.exceptions.MDTFCalledProcessError: Command '/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/conda/conda_init.sh /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/' returned non-zero exit status 1.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/mdtf_framework.py", line 68, in <module>
+    exit_code = main(argv)
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/mdtf_framework.py", line 62, in main
+    exit_code = framework.main()
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/core.py", line 1173, in main
+    run_mgr = self.RuntimeManager(case, self.EnvironmentManager)
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/environment_manager.py", line 512, in __init__
+    self.env_mgr = EnvMgrClass(log=case.log)
+  File "/glade/u/home/bundy/mdtf/MDTF_3_main/MDTF-diagnostics/src/environment_manager.py", line 254, in __init__
+    raise util.PodRuntimeError("Can't find conda.") from exc
+src.util.exceptions.PodRuntimeError: Error in setting the runtime environment: Can't find conda.

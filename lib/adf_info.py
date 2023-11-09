@@ -117,11 +117,19 @@ class AdfInfo(AdfConfig):
         #Case names:
         case_names = self.get_cam_info('cam_case_name', required=True)
 
-        print(case_names)
-
         #Grab test case nickname(s)
-        test_nicknames = self.get_cam_info('case_nickname')
-        if test_nicknames is None:
+        test_nickname_list = self.get_cam_info('case_nickname')
+
+        if test_nickname_list:
+            test_nicknames = [] #set to be an empty list
+            for i,nickname in enumerate(test_nickname_list):
+                if nickname is None:
+                    test_nicknames.append(case_names[i])
+                else:
+                    test_nicknames.append(test_nickname_list[i])
+                #End if
+            #End for
+        else:
             test_nicknames = [] #Re-set to be an empty list
             for case_name in case_names:
                 test_nicknames.append(case_name)
@@ -170,25 +178,28 @@ class AdfInfo(AdfConfig):
 
                 starting_location = Path(baseline_hist_locs)
                 files_list = sorted(starting_location.glob('*'+hist_str+'.*.nc'))
-                base_climo_yrs = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
-
+                base_climo_yrs_str = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
+                base_climo_yrs = []
+                for year in base_climo_yrs_str:
+                   base_climo_yrs.append(int(year))
+                
                 #Check if start or end year is missing.  If so then just assume it is the
                 #start or end of the entire available model data.
                 if syear_baseline is None:
                     print(f"No given start year for {data_name}, using first found year...")
                     syear_baseline = int(base_climo_yrs[0])
-                elif str(syear_baseline) not in base_climo_yrs:
+                elif (syear_baseline) not in base_climo_yrs:
                     print(f"Given start year '{syear_baseline}' is not in current dataset {data_name}, using first found year:",base_climo_yrs[0],"\n")
                     syear_baseline = int(base_climo_yrs[0])
                 #End if
                 if eyear_baseline is None:
                     print(f"No given end year for {data_name}, using last found year...")
                     eyear_baseline = int(base_climo_yrs[-1])
-                elif str(eyear_baseline) not in base_climo_yrs:
+                elif (eyear_baseline) not in base_climo_yrs:
                     print(f"Given end year '{eyear_baseline}' is not in current dataset {data_name}, using last found year:",base_climo_yrs[-1],"\n")
                     eyear_baseline = int(base_climo_yrs[-1])
                 #End if
-
+      
                 #Grab baseline nickname
                 base_nickname = self.get_baseline_info('case_nickname')
                 if base_nickname == None:
@@ -205,6 +216,11 @@ class AdfInfo(AdfConfig):
                     raise AdfError(emsg)
                 #End if
             #End if
+
+            #Grab baseline nickname
+            base_nickname = self.get_baseline_info('case_nickname')
+            if base_nickname == None:
+                base_nickname = data_name
 
             #Update baseline case name:
             data_name += f"_{syear_baseline}_{eyear_baseline}"
@@ -263,24 +279,28 @@ class AdfInfo(AdfConfig):
                 #Get climo years for verification or assignment if missing
                 starting_location = Path(cam_hist_locs[case_idx])
                 files_list = sorted(starting_location.glob('*'+hist_str+'.*.nc'))
-                case_climo_yrs = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
+                case_climo_yrs_str = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
+                case_climo_yrs = []
+                for year in case_climo_yrs_str:
+                   case_climo_yrs.append(int(year))
 
                 #Check if start or end year is missing.  If so then just assume it is the
                 #start or end of the entire available model data.
                 if syear is None:
                     print(f"No given start year for {case_name}, using first found year...")
                     syear = int(case_climo_yrs[0])
-                elif str(syear) not in case_climo_yrs:
+                elif (syear) not in case_climo_yrs:
                     print(f"Given start year '{syear}' is not in current dataset {case_name}, using first found year:",case_climo_yrs[0],"\n")
                     syear = int(case_climo_yrs[0])
                 #End if
                 if eyear is None:
                     print(f"No given end year for {case_name}, using last found year...")
                     eyear = int(case_climo_yrs[-1])
-                elif str(eyear) not in case_climo_yrs:
+                elif (eyear) not in case_climo_yrs:
                     print(f"Given end year '{eyear}' is not in current dataset {case_name}, using last found year:",case_climo_yrs[-1],"\n")
                     eyear = int(case_climo_yrs[-1])
                 #End if
+
             else:
                 #History file path isn't needed if user is running ADF directly on time series.
                 #So make sure start and end year are specified:
@@ -446,7 +466,8 @@ class AdfInfo(AdfConfig):
         return {"syears":syears,"eyears":eyears,
                 "syear_baseline":self.__syear_baseline, "eyear_baseline":self.__eyear_baseline}
 
-    # Create property needed to return the climo start (syear) and end (eyear) years to user:
+
+    # Create property needed to return the case nicknames to user:
     @property
     def case_nicknames(self):
         """Return the test case and baseline nicknames to the user if requested."""

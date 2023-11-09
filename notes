@@ -1,0 +1,33 @@
+
+
+
+    def get_basic_info(self, var_str, required=False):
+        return self.read_config_var(var_str,
+                                    conf_dict=self.__basic_info,
+                                    required=required)
+
+    def read_config_var(self, varname, conf_dict=None, required=False):
+
+
+
+    #Check if the config dictionary has been specified:                                                                                                                 
+        if isinstance(conf_dict, dict):
+            var_dict = conf_dict
+        elif isinstance(conf_dict, type(None)):
+            var_dict = self.__config_dict
+        else:
+            emsg = "Supplied 'conf_dict' variable should be a dictionary,"
+            emsg += f" not type '{type(conf_dict)}'"
+
+
+
+
+
+
+
+
+
+
+
+
+

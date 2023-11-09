@@ -1,0 +1,41 @@
+ADF diagnostics is starting...
+['b.e23_alpha16b.BLT1850.ne30_t232.049']
+Given start year '1' is not in current dataset b.e23_alpha16b.BLT1850.ne30_t232.049, using first found year: 0001 
+
+Given end year '21' is not in current dataset b.e23_alpha16b.BLT1850.ne30_t232.049, using last found year: 0033 
+
+{'mdtf_run': True, 'mdtf_input_settings_filename': 'mdtf_input.json', 'mdtf_codebase_loc': '/glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF', 'conda_root': '/glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/', 'conda_env': '/glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412//_MDTF_base', 'OBS_DATA_ROOT': '/glade/work/bundy/mdtf/inputdata/obs_data', 'OUTPUT_DIR': '/glade/scratch/bundy/ADF/plots/mdtf', 'WORKING_DIR': '/glade/scratch/bundy/ADF/plots/mdtf', 'pod_list': ['blocking_neale', 'example_multicase'], 'make_variab_tar': False, 'save_ps': False, 'save_nc': False, 'overwrite': True, 'verbose': 3, 'test_mode': False, 'dry_run': False, 'data_type': 'multi_run', 'data_manager': 'Local_File', 'environment_manager': 'Conda'}
+
+  Generating CAM time series files...
+	 Processing time series for case 'b.e23_alpha16b.BLT1850.ne30_t232.049' :
+<class 'int'>
+<class 'int'>
+  ...CAM time series file generation has finished successfully.
+Setting up MDTF
+**here Reading CAM timeseries files from ['/glade/campaign/cgd/amp/bundy/b.e23_alpha16b.BLT1850.ne30_t232.049/cam.h0/cam.h0/ts']
+**here Expanded ['/glade/campaign/cgd/amp/bundy/b.e23_alpha16b.BLT1850.ne30_t232.049/cam.h0/cam.h0/ts']
+got code base /glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF
+Running MDTF in background. Command: /glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF/mdtf -f mdtf_input.json Log: ./mdtf.out
+
+  Calculating CAM climatologies...
+	 Calculating climatologies for case 'b.e23_alpha16b.BLT1850.ne30_t232.049' :
+	    INFO: Found climo file and clobber is False, so skipping Z3 and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping U and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping V and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping T and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping TS and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping OMEGA and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping PRECT and moving to next variable.
+	    INFO: Found climo file and clobber is False, so skipping PS and moving to next variable.
+  ...CAM climatologies have been calculated successfully.
+
+  No regridding options provided, continue.
+
+  Nothing listed under 'analysis_scripts', exiting 'perform_analyses' method.
+
+  Nothing listed under 'plotting_scripts', so no plots will be made.
+
+  Generating Diagnostics webpages...
+  ...Webpages have been generated successfully.
+
+ADF diagnostics has completed successfully.

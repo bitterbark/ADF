@@ -1,0 +1,763 @@
+#==============================
+#config_cam_baseline_example.yaml
+
+#This is the main CAM diagnostics config file
+#for doing comparisons of a CAM run against
+#another CAM run, or a CAM baseline simulation.
+
+#Currently, if one is on NCAR's Casper or
+#Cheyenne machine, then only the diagnostic output
+#paths are needed, at least to perform a quick test
+#run (these are indicated with "MUST EDIT" comments).
+#Running these diagnostics on a different machine,
+#or with a different, non-example simulation, will
+#require additional modifications.
+#
+#Config file Keywords:
+#--------------------
+#
+#1.  Using ${xxx} will substitute that text with the
+#    variable referenced by xxx. For example:
+#
+#    cam_case_name: cool_run
+#    cam_climo_loc: /some/where/${cam_case_name}
+#
+#    will set "cam_climo_loc" in the diagnostics package to:
+#    /some/where/cool_run
+#
+#    Please note that currently this will only work if the
+#    variable only exists in one location in the file.
+#
+#2.  Using ${<top_level_section>.xxx} will do the same as
+#    keyword 1 above, but specifies which sub-section the
+#    variable is coming from, which is necessary for variables
+#    that are repeated in different subsections.  For example:
+#
+#    diag_basic_info:
+#      cam_climo_loc:  /some/where/${diag_cam_climo.start_year}
+#
+#    diag_cam_climo:
+#      start_year: 1850
+#
+#    will set "cam_climo_loc" in the diagnostics package to:
+#    /some/where/1850
+#
+#Finally, please note that for both 1 and 2 the keywords must be lowercase.
+#This is because future developments will hopefully use other keywords
+#that are uppercase. Also please avoid using periods (".") in variable
+#names, as this will likely cause issues with the current file parsing
+#system.
+#--------------------
+#
+##==============================
+#
+# This file doesn't (yet) read environment variables, so the user must
+# set this themselves. It is also a good idea to search the doc for 'user'
+# to see what default paths are being set for output/working files.
+#
+# Note that the string 'USER-NAME-NOT-SET' is used in the jupyter script
+# to check for a failure to customize
+#
+# DEFAULT: user: 'USER-NAME-NOT-SET'
+
+user: bundy
+
+#This first set of variables specify basic info used by all diagnostic runs:
+diag_basic_info:
+
+    #Is this a model vs observations comparison?
+    #If "false" or missing, then a model-model comparison is assumed:
+    compare_obs: true
+
+    #Generate HTML website (assumed false if missing):
+    #Note:  The website files themselves will be located in the path
+    #specified by "cam_diag_plot_loc", under the "<diag_run>/website" subdirectory,
+    #where "<diag_run>" is the subdirectory created for this particular diagnostics run
+    #(usually "case_vs_obs_XXX" or "case_vs_baseline_XXX").
+    create_html: true
+
+    #Location of observational datasets:
+    #Note: this only matters if "compare_obs" is true and the path
+    #isn't specified in the variable defaults file.
+    obs_data_loc: /glade/work/nusbaume/SE_projects/model_diagnostics/ADF_obs
+
+    #Location where re-gridded and interpolated CAM climatology files are stored:
+    cam_regrid_loc: /glade/scratch/${user}/ADF/regrid
+
+    #Overwrite CAM re-gridded files?
+    #If false, or missing, then regridding will be skipped for regridded variables
+    #that already exist in "cam_regrid_loc":
+    cam_overwrite_regrid: false
+
+    #Location where diagnostic plots are stored:
+    cam_diag_plot_loc: /glade/scratch/${user}/ADF/plots
+
+    #Use default variable plot settings?
+    #If "true", then variable-specific plotting attributes as defined in
+    #ADF/lib/adf_variable_defaults.yaml will be used:
+    use_defaults: true
+
+    #Location of ADF variable plotting defaults YAML file
+    #if not using the one in ADF/lib:
+  #  defaults_file: /some/path/to/defaults/file
+
+    #Vertical pressure levels (in hPa) on which to plot 3-D variables
+    #when using horizontal (e.g. lat/lon) map projections.
+    #If this config option is missing, then no 3-D variables will be plotted on
+    #horizontal maps.  Please note too that pressure levels must currently match
+    #what is available in the observations file in order to be plotted in a
+    #model vs obs run:
+    plot_press_levels: [200,850]
+
+    #Longitude line on which to center all lat/lon maps.
+    #If this config option is missing then the central
+    #longitude will default to 180 degrees E.
+    central_longitude: 180
+
+    #Apply monthly weights to seasonal averages.
+    #If False or missing, then all months are
+    #given the same weight:
+    weight_season: True
+
+    #Number of processors on which to run the ADF.
+    #If this config variable isn't present then
+    #the ADF defaults to one processor.  Also, if
+    #you set it to "*" then it will default
+    #to all of the processors available on a
+    #single node/machine:
+    num_procs: 8
+
+    #If set to true, then redo all plots even if they already exist.
+    #If set to false, then if a plot is found it will be skipped:
+    redo_plot: false
+
+
+#This second set of variables provides info for the CAM simulation(s) being diagnosed:
+diag_cam_climo:
+
+    #Calculate climatologies?
+    #If false, neither the climatology or time-series files will be created:
+    calc_cam_climo: true
+
+    #Overwrite CAM climatology files?
+    #If false, or not prsent, then already existing climatology files will be skipped:
+    cam_overwrite_climo: false
+
+    #Name of CAM case (or CAM run name):
+    cam_case_name: bhist.e213cosp217.f09_g17.mdtf_v3.1993
+
+    #Location of CAM history (h0) files:
+    #Example test files
+#    cam_hist_loc: /glade/scratch/${user}/archive/${diag_cam_climo.cam_case_name}/atm/hist
+    cam_hist_loc: /glade/scratch/${user}/archive/${diag_cam_climo.cam_case_name}/atm/hist
+
+    #Location of CAM climatologies (to be created and then used by this script)
+    cam_climo_loc: /glade/scratch/${user}/archive/${diag_cam_climo.cam_case_name}/climo
+
+    #model year when time series files should start:
+    #Note:  Leaving this entry blank will make time series
+    #       start at earliest available year.
+    start_year: 1990
+
+    #model year when time series files should end:
+    #Note:  Leaving this entry blank will make time series
+    #       end at latest available year.
+    end_year: 1999
+
+    #Do time series files need to be generated?
+    #If True, then diagnostics assumes that model files are already time series.
+    #If False, or if simply not present, then diagnostics will attempt to create
+    #time series files from history (time-slice) files:
+    cam_ts_done: false
+
+    #Save interim time series files?
+    #WARNING:  This can take up a significant amount of space, but will save 
+    #          processing time the next time
+    cam_ts_save: true
+
+    #Overwrite time series files, if found?
+    #If set to false, then time series creation will be skipped if files are found:
+    cam_overwrite_ts: false
+
+    #Location where time series files are (or will be) stored:
+    cam_ts_loc: /glade/scratch/${user}/archive/${diag_cam_climo.cam_case_name}/ts
+
+    #----------------------
+
+    #You can alternatively provide a list of cases, which will make the ADF
+    #apply the same diagnostics to each case separately in a single ADF session.
+    #All of the config variables below show how it is done, and are the only ones
+    #that need to be lists.  This also automatically enables the generation of
+    #a "main_website" in "cam_diag_plot_loc" that brings all of the different cases
+    #together under a single website.
+
+    #Also please note that config keywords cannot currently be used in list mode.
+
+    #cam_case_name:
+    #    - b.e20.BHIST.f09_g17.20thC.297_05
+    #    - b1850.f19_g17.validation_mct.004
+
+    #calc_cam_climo:
+    #    - true
+    #    - true
+
+    #cam_overwrite_climo:
+    #    - false
+    #    - false
+
+    #cam_hist_loc:
+    #    - /glade/p/cesm/ADF/b.e20.BHIST.f09_g17.20thC.297_05
+    #    - /glade/p/cesm/ADF/b1850.f19_g17.validation_mct.004
+
+    #cam_climo_loc:
+    #    -/some/where/you/want/to/have/climo_files/ #MUST EDIT!
+    #    -/the/same/or/some/other/climo/files/location
+
+    #start_year:
+    #    - 1990
+    #    - 90
+
+    #end_year:
+    #    - 1999
+    #    - 99
+
+    #cam_ts_done:
+    #    - false
+    #    - false
+
+    #cam_ts_save:
+    #    - true
+    #    - true
+
+    #cam_overwrite_ts:
+    #    - false
+    #    - false
+
+    #cam_ts_loc:
+    #    - /some/where/you/want/to/have/time_series_files/
+    #    - /same/or/different/place/you/want/files
+
+    #----------------------
+
+
+#This third set of variables provide info for the CAM baseline climatologies.
+#This only matters if "compare_obs" is false:
+diag_cam_baseline_climo:
+
+    #Calculate cam baseline climatologies?
+    #If false, neither the climatology or time-series files will be created:
+    calc_cam_climo: true
+
+    #Overwrite CAM climatology files?
+    #If false, or not present, then already existing climatology files will be skipped:
+    cam_overwrite_climo: false
+
+    #Name of CAM baseline case:
+    cam_case_name: b.e20.BHIST.f09_g16.20thC.125.02
+
+    #Location of CAM baseline history (h0) files:
+    #Example test files
+    cam_hist_loc: /glade/p/cesm/ADF/${diag_cam_baseline_climo.cam_case_name}
+
+    #Location of baseline CAM climatologies:
+    cam_climo_loc: /glade/scratch/${user}/ADF/${diag_cam_baseline_climo.cam_case_name}/climo
+
+    #model year when time series files should start:
+    #Note:  Leaving this entry blank will make time series
+    #       start at earliest available year.
+    start_year: 1990
+
+    #model year when time series files should end:
+    #Note:  Leaving this entry blank will make time series
+    #       end at latest available year.
+    end_year: 1999
+
+    #Do time series files need to be generated?
+    #If True, then diagnostics assumes that model files are already time series.
+    #If False, or if simply not present, then diagnostics will attempt to create
+    #time series files from history (time-slice) files:
+    cam_ts_done: false
+
+    #Save interim time series files for baseline run?
+    #WARNING:  This can take up a significant amount of space:
+    cam_ts_save: true
+
+    #Overwrite baseline time series files, if found?
+    #If set to false, then time series creation will be skipped if files are found:
+    cam_overwrite_ts: false
+
+    #Location where time series files are (or will be) stored:
+    cam_ts_loc: /glade/scratch/${user}/ADF/${diag_cam_baseline_climo.cam_case_name}/ts 
+
+#This fourth set of variables provides settings for calling the Climate Variability
+# Diagnostics Package (CVDP). If cvdp_run is set to true the CVDP will be set up and
+# run in background mode, likely completing after the ADF has completed.
+# If CVDP is to be run PSL, TREFHT, TS and PRECT (or PRECC and PRECL) should be listed
+# in the diag_var_list variable listing.
+# For more CVDP information: https://www.cesm.ucar.edu/working_groups/CVC/cvdp/
+diag_cvdp_info:
+
+    # Run the CVDP on the listed run(s)?
+    cvdp_run: false
+
+    # CVDP code path, sets the location of the CVDP codebase
+    #  CGD systems path = /home/asphilli/CESM-diagnostics/CVDP/Release/v5.2.0/
+    #  CISL systems path = /glade/u/home/asphilli/CESM-diagnostics/CVDP/Release/v5.2.0/
+    #  github location = https://github.com/NCAR/CVDP-ncl
+    cvdp_codebase_loc: /glade/u/home/asphilli/CESM-diagnostics/CVDP/Release/v5.2.0/
+
+    # Location where cvdp codebase will be copied to and diagnostic plots will be stored
+    cvdp_loc: /glade/scratch/asphilli/ADF-Sandbox/cvdp/      #MUST EDIT!
+
+    # tar up CVDP results?
+    cvdp_tar: false
+
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++
+#These variables below only matter if you are using
+#a non-standard method, or are adding your own
+#diagnostic scripts.
+#+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#Note:  If you want to pass arguments to a particular script, you can
+#do it like so (using the "averaging_example" script in this case):
+# - {create_climo_files: {kwargs: {clobber: true}}}
+
+#Name of time-averaging scripts being used to generate climatologies.
+#These scripts must be located in "scripts/averaging":
+time_averaging_scripts:
+    - create_climo_files
+
+#Name of regridding scripts being used.
+#These scripts must be located in "scripts/regridding":
+regridding_scripts:
+    - regrid_and_vert_interp
+
+#List of analysis scripts being used.
+#These scripts must be located in "scripts/analysis":
+analysis_scripts:
+#    - amwg_table
+
+#List of plotting scripts being used.
+#These scripts must be located in "scripts/plotting":
+plotting_scripts:
+#    - global_latlon_map
+#    - global_latlon_vect_map
+#    - zonal_mean
+#    - polar_map
+#    - cam_taylor_diagram
+
+#List of CAM variables that will be processesd:
+#If CVDP is to be run PSL, TREFHT, TS and PRECT (or PRECC and PRECL) should be listed
+diag_var_list:
+   - ADRAIN
+   - ADSNOW
+   - AEROD_v
+   - ANRAIN
+   - ANSNOW
+   - AODDUST
+   - AODDUST1
+   - AODDUST3
+   - AODVIS
+   - AQRAIN
+   - AQSNOW
+   - AREI
+   - AREL
+   - AWNC
+   - AWNI
+   - CCN3
+   - CDNUMC
+   - CFAD_DBZE94_CS
+   - CFAD_SR532_CAL
+   - CLDHGH
+   - CLDHGH_CAL
+   - CLDHGH_CAL_ICE
+   - CLDHGH_CAL_LIQ
+   - CLDHGH_CAL_UN
+   - CLDICE
+   - CLDLIQ
+   - CLDLOW
+   - CLDLOW_CAL
+   - CLDLOW_CAL_ICE
+   - CLDLOW_CAL_LIQ
+   - CLDLOW_CAL_UN
+   - CLDMED
+   - CLDMED_CAL
+   - CLDMED_CAL_ICE
+   - CLDMED_CAL_LIQ
+   - CLDMED_CAL_UN
+   - CLDTOT
+   - CLDTOT_CAL
+   - CLDTOT_CALCS
+   - CLDTOT_CAL_ICE
+   - CLDTOT_CAL_LIQ
+   - CLDTOT_CAL_UN
+   - CLDTOT_CS
+   - CLDTOT_CS2
+   - CLDTOT_ISCCP
+   - CLD_CAL
+   - CLD_CAL_ICE
+   - CLD_CAL_LIQ
+   - CLD_CAL_NOTCS
+   - CLD_CAL_UN
+   - CLD_MISR
+   - CLHMODIS
+   - CLIMODIS
+   - CLLMODIS
+   - CLMMODIS
+   - CLMODIS
+   - CLOUD
+   - CLOUDCOVER_CLUBB
+   - CLOUDFRAC_CLUBB
+   - CLRIMODIS
+   - CLRLMODIS
+   - CLTMODIS
+   - CLWMODIS
+   - CO2
+   - CO2_FFF
+   - CO2_LND
+   - CO2_OCN
+   - CONCLD
+   - CS_MIXCERT
+   - CS_MIXPOSS
+   - CS_NOPRECIP
+   - CS_PIA
+   - CS_RAINCERT
+   - CS_RAINHARD
+   - CS_RAINPOSS
+   - CS_RAINPROB
+   - CS_SNOWCERT
+   - CS_SNOWPOSS
+   - CS_UN
+   - DCQ
+   - DF_H2O2
+   - DF_H2SO4
+   - DF_SO2
+   - DMS
+   - DMS_SRF
+   - DTCOND
+   - DTV
+   - DTWR_H2O2
+   - DTWR_H2SO4
+   - DTWR_SO2
+   - FICE
+   - FISCCP1_COSP
+   - FLDS
+   - FLNS
+   - FLNSC
+   - FLNT
+   - FLNTC
+   - FLNTCLR
+   - FLUT
+   - FLUTC
+   - FREQCLR
+   - FREQI
+   - FREQL
+   - FREQR
+   - FREQS
+   - FSDS
+   - FSDSC
+   - FSNS
+   - FSNSC
+   - FSNT
+   - FSNTC
+   - FSNTOA
+   - FSNTOAC
+   - FSUTOA
+   - H2O
+   - H2O2
+   - H2O2_SRF
+   - H2O_CLXF
+   - H2O_CMXF
+   - H2O_SRF
+   - H2SO4
+   - H2SO4_SRF
+   - ICEFRAC
+   - ICIMR
+   - ICWMR
+   - IWC
+   - IWPMODIS
+   - LANDFRAC
+   - LHFLX
+   - LWCF
+   - LWPMODIS
+   - MEANCLDALB_ISCCP
+   - MEANPTOP_ISCCP
+   - MEANTAU_ISCCP
+   - MEANTBCLR_ISCCP
+   - MEANTB_ISCCP
+   - NUMICE
+   - NUMLIQ
+   - NUMRAI
+   - NUMSNO
+   - OCNFRAC
+   - OMEGA
+   - OMEGAT
+   - PBLH
+   - PCTMODIS
+   - PHIS
+   - PRECC
+   - PRECL
+   - PRECSC
+   - PRECSL
+   - PS
+   - PSL
+   - Q
+   - QFLX
+   - QREFHT
+   - QRL
+   - QRS
+   - QT
+   - RAINQM
+   - RCMINLAYER_CLUBB
+   - RCMTEND_CLUBB
+   - RCM_CLUBB
+   - REFFCLIMODIS
+   - REFFCLWMODIS
+   - RELHUM
+   - RELVAR
+   - RFL_PARASOL
+   - RHO_CLUBB
+   - RIMTEND_CLUBB
+   - RTP2_CLUBB
+   - RTPTHLP_CLUBB
+   - RVMTEND_CLUBB
+   - SFCO2
+   - SFCO2_FFF
+   - SFCO2_LND
+   - SFCO2_OCN
+   - SFDMS
+   - SFH2O2
+   - SFH2SO4
+   - SFSO2
+   - SFSOAG
+   - SFbc_a1
+   - SFbc_a4
+   - SFdst_a1
+   - SFdst_a2
+   - SFdst_a3
+   - SFncl_a1
+   - SFncl_a2
+   - SFncl_a3
+   - SFnum_a1
+   - SFnum_a2
+   - SFnum_a3
+   - SFnum_a4
+   - SFpom_a1
+   - SFpom_a4
+   - SFso4_a1
+   - SFso4_a2
+   - SFso4_a3
+   - SFsoa_a1
+   - SFsoa_a2
+   - SHFLX
+   - SL
+   - SNOWHICE
+   - SNOWHLND
+   - SNOWQM
+   - SO2
+   - SO2_CLXF
+   - SO2_CMXF
+   - SO2_SRF
+   - SOAG
+   - SOAG_SRF
+   - SOLIN
+   - STEND_CLUBB
+   - SWCF
+   - T
+   - TAUBLJX
+   - TAUBLJY
+   - TAUGWX
+   - TAUGWY
+   - TAUILOGMODIS
+   - TAUIMODIS
+   - TAUTLOGMODIS
+   - TAUTMODIS
+   - TAUWLOGMODIS
+   - TAUWMODIS
+   - TAUX
+   - TAUY
+   - TGCLDCWP
+   - TGCLDIWP
+   - TGCLDLWP
+   - THLP2_CLUBB
+   - TMCO2
+   - TMCO2_FFF
+   - TMCO2_LND
+   - TMCO2_OCN
+   - TMQ
+   - TREFHT
+   - TS
+   - TSMN
+   - TSMX
+   - U
+   - U10
+   - UM_CLUBB
+   - UP2_CLUBB
+   - UPWP_CLUBB
+   - UTEND_CLUBB
+   - UU
+   - V
+   - VD01
+   - VM_CLUBB
+   - VP2_CLUBB
+   - VPWP_CLUBB
+   - VQ
+   - VT
+   - VTEND_CLUBB
+   - VU
+   - VV
+   - WD_H2O2
+   - WD_H2SO4
+   - WD_SO2
+   - WP2_CLUBB
+   - WP3_CLUBB
+   - WPRCP_CLUBB
+   - WPRTP_CLUBB
+   - WPTHLP_CLUBB
+   - WPTHVP_CLUBB
+   - WSUB
+   - Z3
+   - ZM_CLUBB
+   - ZT_CLUBB
+   - ac_CO2
+   - bc_a1
+   - bc_a1DDF
+   - bc_a1SFWET
+   - bc_a1_SRF
+   - bc_a4
+   - bc_a4DDF
+   - bc_a4SFWET
+   - bc_a4_CLXF
+   - bc_a4_CMXF
+   - bc_a4_SRF
+   - bc_c1
+   - bc_c1SFWET
+   - bc_c4
+   - bc_c4SFWET
+   - dst_a1
+   - dst_a1DDF
+   - dst_a1SF
+   - dst_a1SFWET
+   - dst_a1_SRF
+   - dst_a2
+   - dst_a2DDF
+   - dst_a2SF
+   - dst_a2SFWET
+   - dst_a2_SRF
+   - dst_a3
+   - dst_a3DDF
+   - dst_a3SF
+   - dst_a3SFWET
+   - dst_a3_SRF
+   - dst_c1
+   - dst_c1SFWET
+   - dst_c2
+   - dst_c2SFWET
+   - dst_c3
+   - dst_c3SFWET
+   - ncl_a1
+   - ncl_a1DDF
+   - ncl_a1SF
+   - ncl_a1SFWET
+   - ncl_a1_SRF
+   - ncl_a2
+   - ncl_a2DDF
+   - ncl_a2SF
+   - ncl_a2SFWET
+   - ncl_a2_SRF
+   - ncl_a3
+   - ncl_a3DDF
+   - ncl_a3SF
+   - ncl_a3SFWET
+   - ncl_a3_SRF
+   - ncl_c1
+   - ncl_c1SFWET
+   - ncl_c2
+   - ncl_c2SFWET
+   - ncl_c3
+   - ncl_c3SFWET
+   - num_a1
+   - num_a1DDF
+   - num_a1SF
+   - num_a1SFWET
+   - num_a1_CLXF
+   - num_a1_CMXF
+   - num_a1_SRF
+   - num_a2
+   - num_a2DDF
+   - num_a2SF
+   - num_a2SFWET
+   - num_a2_CLXF
+   - num_a2_CMXF
+   - num_a2_SRF
+   - num_a3
+   - num_a3DDF
+   - num_a3SF
+   - num_a3SFWET
+   - num_a3_SRF
+   - num_a4
+   - num_a4DDF
+   - num_a4SFWET
+   - num_a4_CLXF
+   - num_a4_CMXF
+   - num_a4_SRF
+   - num_c1
+   - num_c1SFWET
+   - num_c2
+   - num_c2SFWET
+   - num_c3
+   - num_c3SFWET
+   - num_c4
+   - num_c4SFWET
+   - pom_a1
+   - pom_a1DDF
+   - pom_a1SFWET
+   - pom_a1_SRF
+   - pom_a4
+   - pom_a4DDF
+   - pom_a4SFWET
+   - pom_a4_CLXF
+   - pom_a4_CMXF
+   - pom_a4_SRF
+   - pom_c1
+   - pom_c1SFWET
+   - pom_c4
+   - pom_c4SFWET
+   - so4_a1
+   - so4_a1DDF
+   - so4_a1SFWET
+   - so4_a1_CLXF
+   - so4_a1_CMXF
+   - so4_a1_SRF
+   - so4_a2
+   - so4_a2DDF
+   - so4_a2SFWET
+   - so4_a2_CLXF
+   - so4_a2_CMXF
+   - so4_a2_SRF
+   - so4_a3
+   - so4_a3DDF
+   - so4_a3SFWET
+   - so4_a3_SRF
+   - so4_c1
+   - so4_c1SFWET
+   - so4_c2
+   - so4_c2SFWET
+   - so4_c3
+   - so4_c3SFWET
+   - soa_a1
+   - soa_a1DDF
+   - soa_a1SFWET
+   - soa_a1_SRF
+   - soa_a2
+   - soa_a2DDF
+   - soa_a2SFWET
+   - soa_a2_SRF
+   - soa_c1
+   - soa_c1SFWET
+   - soa_c2
+   - soa_c2SFWET
+
+
+#END OF FILE

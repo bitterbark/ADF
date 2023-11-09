@@ -1,0 +1,33 @@
+{
+    "basecase_model_info": [
+        {
+            "model": "CESM"
+        },
+        {
+            "convention": "CESM"
+        }
+    ],
+    "case_model_info": [
+        {
+            "model": "CESM"
+        },
+        {
+            "convention": "CESM"
+        }
+    ],
+    "dry_run": "false   // Framework test. No external commands are run and no remote data is copied. Implies test_mode.",
+    "mdtf_codebase_loc": "/glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF",
+    "mdtf_conda_env": "/glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/_MDTF_base",
+    "mdtf_obs_data_root": "/glade/work/bundy/mdtf/inputdata/obs_data",
+    "mdtf_run": true,
+    "mdtf_tar": false,
+    "overwrite": true,
+    "pod_list": [
+        "blocking_neale",
+        "example_multicase"
+    ],
+    "save_nc": false,
+    "save_ps": false,
+    "test_mode": "false   // Set to true for framework test. Data is fetched but PODs are not run.",
+    "verbose": "3       // Log verbosity level."
+}

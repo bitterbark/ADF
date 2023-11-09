@@ -49,6 +49,12 @@
 # category  -> The website category the variable will be placed under.
 #
 #
+# DERIVING:
+#
+# derivable_from -> If not present in the available output files, the variable can be derived from
+#                   other variables that are present (e.g. PRECT can be derived from PRECC and PRECL),
+#                   which are specified in this list
+#
 # Final Note:  Please do not modify this file unless you plan to push your changes back to the ADF repo.
 #              If you would like to modify this file for your personal ADF runs then it is recommended
 #              to make a copy of this file, make modifications in that copy, and then point the ADF to
@@ -445,6 +451,7 @@ PRECT:
   obs_name: "ERAI"
   obs_var_name: "PRECT"
   category: "Hydrologic cycle"
+  derivable_from: ['PRECL','PRECC']
 
 QFLX:
   category: "Hydrologic cycle"
@@ -941,6 +948,89 @@ OMEGAT:
   colormap: "PuOr_r"
   diff_colormap: "coolwarm"
   plot_log_pressure: True
+
+#++++++++++++++
+# Category: TEM
+#++++++++++++++
+uzm:
+  ylim: [1e3,1]
+  units: m s-1
+  long_name: Zonal-Mean zonal wind
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "uzm"
+
+vzm:
+  ylim: [1e3,1]
+  units: m s-1
+  long_name: Zonal-Mean meridional wind
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "vzm"
+
+epfy:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: northward component of the Eliassen–Palm flux
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "epfy"
+
+epfz:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: upward component of the Eliassen–Palm flux
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "epfz"
+
+vtem:
+  ylim: [1e2,1]
+  units: m/s
+  long_name: Transformed Eulerian mean northward wind
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "vtem"
+
+wtem:
+  ylim: [1e2,1]
+  units: m/s
+  long_name: Transformed Eulerian mean upward wind
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "wtem"
+
+psitem:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: Transformed Eulerian mean mass stream function
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "psitem"
+
+utendepfd:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: tendency of eastward wind due to Eliassen-Palm flux divergence
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "utendepfd"
+
+utendvtem:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: tendency of eastward wind due to TEM northward wind advection and the coriolis term
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "utendvtem"
+
+utendwtem:
+  ylim: [1e2,1]
+  units: m3 s−2
+  long_name: tendency of eastward wind due to TEM upward wind advection
+  obs_file: "TEM_ERA5.nc"
+  obs_name: "ERA5"
+  obs_var_name: "utendwtem"
 
 #-----------
 #End of File
