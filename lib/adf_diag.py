@@ -179,8 +179,6 @@ class AdfDiag(AdfWeb):
             self.expand_references(self.__mdtf_info)
         #End if
 
-        print(self.__mdtf_info)
-
         #--------- ADF scripts ------------------------------------------------------
         #Add averaging script names:
         self.__time_averaging_scripts = self.read_config_var('time_averaging_scripts')
@@ -978,17 +976,25 @@ class AdfDiag(AdfWeb):
         #import needed standard modules:
         import shutil
 
-        print("Setting up MDTF")
+        test = False  #True (copy files but don't run), False (copy files and run MDTF).  DRB make this a yaml variable
+        verbose = 1  # 0 errors and major sections, 1 warnings, 2 detailed, 3 excessive 
+                
+        print("\n  Setting up MDTF...")
         #We want access to the entire dict of mdtf_info
         mdtf_info = self.__mdtf_info
+        var_list = self.diag_var_list
         
-       
         cam_ts_loc   =  self.get_cam_info('cam_ts_loc', required=True)
-        print(f'**here Reading CAM timeseries files from {cam_ts_loc}') 
         cam_ts_loc = self.get_cam_info('cam_ts_loc')
-        self.expand_references({"cam_ts_loc" : cam_ts_loc})
-        print(f'**here Expanded {cam_ts_loc}') 
+        hist_str   = self.get_basic_info('hist_str')
+        if not hist_str:
+            hist_str = 'cam.h0'
+            print(f'WARNING: no hist_str found by setup_run_mdtf. Using {hist_str}')
 
+        self.expand_references({"cam_ts_loc" : cam_ts_loc})
+        if verbose>0: print(f'\t Using timeseries files for {hist_str} from {cam_ts_loc[0]}') 
+
+        
         #
         # Create a dict with all the case info needed for MDTF case_list
         #     Note that model and convention are hard-coded to CESM because that's all we expect here
@@ -1016,16 +1022,95 @@ class AdfDiag(AdfWeb):
             json.dump(mdtf_info, out_file, sort_keys = True, indent = 4,
                ensure_ascii = False)
         mdtf_codebase = self.get_mdtf_info('mdtf_codebase_loc')
-        print(f'got code base {mdtf_codebase}')
+        print(f'\t Using MDTF code base {mdtf_codebase}')
 
+        #
+        # Move the data to the dir structure and file names expected by the MDTF
+        # (copying /glade/u/home/bundy/diag/mdtf/mv_cesm_data.csh)
+        #   model_input_data/case/freq/case.VAR.freq.nc
+        # Note: just working out the function here, will move eventually!
+
+        mdtf_model_data_root = self.get_mdtf_info('MODEL_DATA_ROOT')
+
+
+        #These MDTF words for day & month .But CESM will have hour_6 and hour_3, etc.
+        #Going to need a dict to translate.
+        #Use cesm_freq_strings = freq_string_options.keys
+        # and then freq = freq_string_option(freq_string_found)
+        freq_string_options = [ "month","day","6hr","3hr","1hr"]  
+
+
+        for case_idx, case_name in enumerate(case_names):
+
+            for var in var_list:
+
+                #
+                # Source file is ADF time series file
+                #
+                adf_file_str = cam_ts_loc[case_idx] + os.sep + ".".join([case_name, hist_str, var,"*" ])  # * to match timestamp: could be multiples
+                adf_file_list = glob.glob(adf_file_str)
+                if len(adf_file_list) == 1:
+                    if (verbose > 1 ): print(f'Copying ts file: {adf_file_list} to MDTF dir')
+                elif len(adf_file_list) >1:
+                     if (verbose > 0 ):print(f'WARNING: found multiple timeseries files {adf_file_list}. Running but suggest cleaning up ts dir')
+                else:
+                      if (verbose > 0 ):print(f'WARNING: No files matching {case}.{hist_str}.{var} found in {adf_file_str}. Skipping')
+                      continue            #skip this case/hist_str/var file
+                adf_file = adf_file_list[0] 
+
+                # If freq is not set, it means we just started this hist_str. So check the first ADF file to find it
+                hist_file_ds    =  xr.open_dataset(adf_file, decode_cf=False, decode_times=False)
+                if 'time_period_freq' in hist_file_ds.attrs:
+                    dataset_freq = hist_file_ds.attrs['time_period_freq']
+                    if (verbose > 2 ): print(f"time_period_freq attribute found: {dataset_freq}")
+                else:
+                    if (verbose > 0 ): print(f"ERROR: Necessary 'time_period_freq' attribute missing from {adf_file}")
+                    continue
+
+                found_strings = [word for word in freq_string_options if word in dataset_freq]
+                if len(found_strings)==1:
+                    if (verbose > 2 ): print(f'Found dataset_freq {dataset_freq} matches {found_strings}')
+                elif len(found_strings)>1:
+                    if (verbose > 0 ):print(f"WARNING: Found dataset_freq {dataset_freq} matches multiple string possibilities:{', '.join(found_strings)}")
+                else:
+                    if (verbose > 0 ):
+                        print("ERROR: None of the frequency options {freq_string_options} are present in the time_period_freq attribute {time_perido_freq}") 
+                        print("Skipping {adf_file}")
+                        freq = "frequency_missing"
+                    continue
+                freq = found_strings[0]
+
+            
+                #
+                # Destination file is MDTF directory and name structure
+                #
+                mdtf_dir = os.sep.join([mdtf_model_data_root,case_name,freq])
+
+                os.makedirs(mdtf_dir, exist_ok=True)
+                mdtf_file = mdtf_dir + os.sep+ ".".join([case_name,var,freq,"nc"])
+                mdtf_file_list = glob.glob(mdtf_file)               #Check if files already exist in MDTF directory
+                if mdtf_file_list:                                  #If files exist, then check if over-writing is allowed:
+                    if (verbose > 0 ): print(f'\t   INFO: not clobbering existing mdtf file {mdtf_file_list}')
+                                       #logic to allow override#  if not overwrite_mdtf[case_idx]: 
+                    continue    #simply skip file copy for this variable:
+
+                if (verbose > 1 ): print(f'copying {adf_file} to {mdtf_file}')
+                shutil.copyfile(adf_file, mdtf_file)
+            # end for var
+        # end for case
+            
         #
         # Submit the MDTF script in background mode, send output to mdtf.out file       
         #
         mdtf_log = os.path.join('./mdtf.out') # maybe set this to cam_diag_plot_loc: /glade/scratch/${user}/ADF/plots
         mdtf_exe = mdtf_codebase+'/mdtf -f '+mdtf_input_settings_filename  
-        print(f'Running MDTF in background. Command: {mdtf_exe} Log: {mdtf_log}')
-        with open(mdtf_log, 'w', encoding='utf-8') as subout:
-            _ = subprocess.Popen([mdtf_exe], shell=True, stdout=subout, stderr=subout, close_fds=True)
+        if test:
+            print(f'\t ...Test only. NOT Running MDTF')
+            print(f'\t    Command: {mdtf_exe} Log: {mdtf_log}')
+        else:
+            print(f'\t ...Running MDTF in background. Command: {mdtf_exe} Log: {mdtf_log}')
+            with open(mdtf_log, 'w', encoding='utf-8') as subout:
+                _ = subprocess.Popen([mdtf_exe], shell=True, stdout=subout, stderr=subout, close_fds=True)
 
 
     #########

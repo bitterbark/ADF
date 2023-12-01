@@ -279,7 +279,20 @@ class AdfInfo(AdfConfig):
                 #Get climo years for verification or assignment if missing
                 starting_location = Path(cam_hist_locs[case_idx])
                 files_list = sorted(starting_location.glob('*'+hist_str+'.*.nc'))
-                case_climo_yrs_str = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
+                nfiles = len(files_list)
+                #print(f"cam_hist found {nfiles} candidate files in {starting_location}")
+                if (hist_str == "cam.h0"):
+                    char_start = -7
+                    char_end   = -3
+                elif (hist_str == "cam.h2"):
+                    char_start = -16
+                    char_end   = -12
+                else:
+                    char_start = -16
+                    char_end   = -12
+                    print("unknown character placement for {hist_str} type files. Trying {char_start}:{char_end}")
+                    
+                case_climo_yrs_str = sorted(np.unique([i.stem[char_start:char_end] for i in files_list]))
                 case_climo_yrs = []
                 for year in case_climo_yrs_str:
                    case_climo_yrs.append(int(year))
@@ -500,7 +513,7 @@ class AdfInfo(AdfConfig):
         """
         Return the config variable from 'diag_cam_climo' as requested by
         the user.  This function assumes that if the user is requesting it,
-        then it must be required. (DRB: This statement contradicts the default value of required=False)
+        then it must be required. (Note: Doesn't statement contradicts the default value of required=False)
         """
 
         return self.read_config_var(var_str,
