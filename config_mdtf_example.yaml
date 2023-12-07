@@ -67,7 +67,7 @@ diag_basic_info:
     # Only affects timeseries as everything else uses timeseries 
     # Leave off trailing '.'
     #Default: cam.h0
-    hist_str: cam.h0           
+    hist_str: cam.h2
 
     #Is this a model vs observations comparison?
     #If "false" or missing, then a model-model comparison is assumed:
@@ -289,18 +289,19 @@ diag_cvdp_info:
 #
 # Many other diagnostics are available; see 
 # https://mdtf-diagnostics.readthedocs.io/en/main/sphinx/start_overview.html
+#
 diag_mdtf_info:
     # Run the MDTF on the model cases
     mdtf_run: true
 
-    # The file that will be written by ADF and input to MDTF
+    # The file that will be written by ADF to input to MDTF
     mdtf_input_settings_filename : "mdtf_input.json"   
 
     # MDTF code path, sets the location of the MDTF codebase and pre-compiled conda envs
     #    github location = https://github.com/NOAA-GFDL/MDTF-diagnostics
     mdtf_codebase_loc  : /glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF
-    conda_root         : /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/
-    conda_env_root     : ${conda_root}/_MDTF_base
+    conda_root         : /glade/u/home/bundy/miniconda2
+    conda_env_root     : /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/
     OBS_DATA_ROOT      : /glade/work/bundy/mdtf/inputdata/obs_data
     OUTPUT_DIR         : ${diag_basic_info.cam_diag_plot_loc}/mdtf  #Keep these the same
     WORKING_DIR        : ${diag_basic_info.cam_diag_plot_loc}/mdtf
@@ -365,14 +366,16 @@ plotting_scripts:
 #List of CAM variables that will be processesd:
 #If CVDP is to be run PSL, TREFHT, TS and PRECT (or PRECC and PRECL) should be listed
 diag_var_list:
-    - Z3
-    - U
-    - V
-    - T
-    - TS
+    - FLUT
     - OMEGA
+    - PRECC
     - PRECT
-    - PS
+    - PSL
+    - U200
+    - U850
+    - V200
+    - V850
+
 
 #<Add more variables here.>
 
