@@ -378,7 +378,7 @@ class AdfDiag(AdfWeb):
 
         #Notify user that script has started:
         print("\n  Generating CAM time series files...")
-
+        
         #Check if baseline time-series files are being created:
         if baseline:
             #Use baseline settings, while converting them all
@@ -407,6 +407,9 @@ class AdfDiag(AdfWeb):
         if not hist_str:
             hist_str = 'cam.h0'
         #End if
+
+        print(f"from {hist_str} files")
+        print(f"\n writing to {ts_dir}")
 
         # get info about variable defaults
         res = self.variable_defaults

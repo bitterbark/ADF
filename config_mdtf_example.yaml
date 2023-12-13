@@ -58,6 +58,7 @@
 # to check for a failure to customize
 #
 
+#user: USER-NAME-NOT-SET
 user: bundy
 
 #This first set of variables specify basic info used by all diagnostic runs:
@@ -67,7 +68,7 @@ diag_basic_info:
     # Only affects timeseries as everything else uses timeseries 
     # Leave off trailing '.'
     #Default: cam.h0
-    hist_str: cam.h2
+    hist_str: cam.h2   #SET hist string for daily files
 
     #Is this a model vs observations comparison?
     #If "false" or missing, then a model-model comparison is assumed:
@@ -142,22 +143,22 @@ diag_cam_climo:
     #If false, or not prsent, then already existing climatology files will be skipped:
     cam_overwrite_climo: false
 
-    #Name of CAM case (or CAM run name):
-    cam_case_name: b.e23_alpha16b.BLT1850.ne30_t232.049
+    #Name of CAM case (or CAM run name):  
+    cam_case_name: b.e23_alpha16b.BLT1850.ne30_t232.049   #SET
 
     #Case nickname
     #NOTE: if nickname starts with '0' - nickname must be in quotes!
     # ie '026a' as opposed to 026a
     #If missing or left blank, will default to cam_case_name
-    case_nickname: blt1850.049
+    case_nickname: blt1850.049  #SET
 
     #Path to where all working files (beyond hist) should be written. ${dir_out}/${cam_case_name}/${type}
-    dir_out: /glade/campaign/cgd/amp/bundy/${diag_cam_climo.cam_case_name}/${hist_str}
+    dir_out: /glade/campaign/cgd/amp/${user}/${diag_cam_climo.cam_case_name}/${hist_str}   #SET
 
 
     #Location of CAM history (h0) files:
     #Example test files
-    cam_hist_loc: /glade/scratch/hannay/archive/${diag_cam_climo.cam_case_name}/atm/hist
+    cam_hist_loc: /glade/scratch/hannay/archive/${diag_cam_climo.cam_case_name}/atm/hist    #SET
 
     #Location of CAM climatologies (to be created and then used by this script)
     cam_climo_loc: ${dir_out}/${hist_str}/climo
@@ -165,12 +166,12 @@ diag_cam_climo:
     #model year when time series files should start:
     #Note:  Leaving this entry blank will make time series
     #       start at earliest available year.
-    start_year: 1
+    start_year: 1  #SET
 
     #model year when time series files should end:
     #Note:  Leaving this entry blank will make time series
     #       end at latest available year.
-    end_year: 21
+    end_year: 21   #SET
 
     #Do time series files exist?
     #If True, then diagnostics assumes that model files are already time series.
@@ -188,7 +189,7 @@ diag_cam_climo:
     cam_overwrite_ts: false
 
     #Location where time series files are (or will be) stored:
-    cam_ts_loc: ${dir_out}/${hist_str}/ts   #DRB don't need the hist_str, 
+    cam_ts_loc: ${dir_out}/ts   
 
 
     #----------------------
@@ -273,7 +274,7 @@ diag_cvdp_info:
 
 # This set of variables provides settings for calling NOAA's
 # Model Diagnostic Task Force (MDTF) diagnostic package.
-# https://mdtf-diagnostics.readthedocs.io/en/main/sphinx/start_overview.html
+# https://github.com/NOAA-GFDL/MDTF-diagnostics
 #
 # If mdtf_run: true, the MDTF will be set up and 
 # run in background mode, likely completing after the ADF has completed.
@@ -289,23 +290,26 @@ diag_cvdp_info:
 #
 # Many other diagnostics are available; see 
 # https://mdtf-diagnostics.readthedocs.io/en/main/sphinx/start_overview.html
+
 #
 diag_mdtf_info:
     # Run the MDTF on the model cases
     mdtf_run: true
 
-    # The file that will be written by ADF to input to MDTF
+    # The file that will be written by ADF to input to MDTF. Call this whatever you want.
     mdtf_input_settings_filename : "mdtf_input.json"   
 
     # MDTF code path, sets the location of the MDTF codebase and pre-compiled conda envs
-    #    github location = https://github.com/NOAA-GFDL/MDTF-diagnostics
+    # DO NOT CHANGE unless you have your own MDTF code and installed CONDA envs
     mdtf_codebase_loc  : /glade/u/home/bundy/diag/mdtf/MDTF_3_main/MDTF-diagnostics.v3.1.20230817.ADF
     conda_root         : /glade/u/home/bundy/miniconda2
     conda_env_root     : /glade/work/bundy/miniconda2/envs.MDTFv3.1.20230412/
     OBS_DATA_ROOT      : /glade/work/bundy/mdtf/inputdata/obs_data
     OUTPUT_DIR         : ${diag_basic_info.cam_diag_plot_loc}/mdtf  #Keep these the same
     WORKING_DIR        : ${diag_basic_info.cam_diag_plot_loc}/mdtf
-    MODEL_DATA_ROOT     : /glade/work/bundy/mdtf/inputdata/model/
+
+    # SET this to a writable dir. The ADF will place ts files here for the MDTF to read.
+    MODEL_DATA_ROOT     : /glade/work/bundy/mdtf/inputdata/model/  
 
     # Choose diagnostics (PODs). Full list of available PODs: https://github.com/NOAA-GFDL/MDTF-diagnostics
     pod_list      :  [ "MJO_suite" ]
@@ -313,7 +317,7 @@ diag_mdtf_info:
     # Intermediate/output file settings
     make_variab_tar: false     # tar up MDTF results
     save_ps : false     # save postscript figures in addition to bitmaps
-    save_nc : false     # save netCDF files of processed data (recommend true when starting with new model data)
+    save_nc : true      # save netCDF files of processed data (recommend true when starting with new model data)
     overwrite: true     # overwrite results in OUTPUT_DIR; otherwise results saved under a unique name
 
     # Settings used in debugging:
@@ -322,7 +326,7 @@ diag_mdtf_info:
     dry_run  : false   # Framework test. No external commands are run and no remote data is copied. Implies test_mode.
 
     # Settings that shouldn't change in ADF implementation 
-    data_type           : single_run  # single_run or multi_run (both compare to obs also)
+    data_type           : single_run # single_run or multi_run (only works with single right now)
     data_manager        : Local_File # Fetch data or it is local?
     environment_manager : Conda      # Manage dependencies
 
