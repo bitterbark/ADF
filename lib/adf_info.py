@@ -89,9 +89,26 @@ class AdfInfo(AdfConfig):
             self.__num_cases = 1
         #End if
 
+            
         #Loop over all items in config dict:
         for conf_var, conf_val in self.__cam_climo_info.items():
-            if isinstance(conf_val, list):
+            #Hist_str can be a list for each case, so set it as a nested list here
+            if ('hist_str' in conf_var):   #DRBDBG make a function. Please make a function!
+                if ( isinstance(self.get_cam_info("hist_str",required=True), list)):
+                    print(f"DRBDBG found hist_str is list ")
+                    dim1 = len(conf_val)
+                    print(f"DRBDBG found hist_str top dim {dim1} ")
+                    if ( isinstance(conf_val[0], list)):
+                        print(f"DRBDBG found hist_str multi-dim list")
+                        dim2 = len(conf_val[0])
+                        print(f"DRBDBG found hist_str top dim {dim1} and second dim {dim2} ")
+                    hist_str = conf_val
+                else:  # one case, one hist str
+                    print(f"DRBDBG Found hist_str single value {conf_val}")
+                    hist_str = [conf_val]  # make a nested list [ncases,nfiles] of the given value
+                self.__cam_climo_info[conf_var] = [hist_str]
+                print(f"DRBDBG hist_str {type(hist_str)} {len(hist_str)} {hist_str}")
+            elif isinstance(conf_val, list):
                 #If a list, then make sure it is has the correct number of entries:
                 if not len(conf_val) == self.__num_cases:
                     emsg = f"diag_cam_climo config variable '{conf_var}' should have"
@@ -105,12 +122,9 @@ class AdfInfo(AdfConfig):
         #-------------------------------------------
 
         #Read hist_str (component.hist_num) from the yaml file, or set to default
-        hist_str = self.get_basic_info('hist_str')
-        #If hist_str is not present, then default to 'cam.h0':
-        if not hist_str:
-            hist_str = 'cam.h0'
-        #End if
-
+        hist_str = self.get_cam_info("hist_str")
+        print(f"DRBDBG adf_info L127 got {hist_str}")
+        
         #Initialize ADF variable list:
         self.__diag_var_list = self.read_config_var('diag_var_list', required=True)
 
@@ -175,7 +189,7 @@ class AdfInfo(AdfConfig):
 
             #Check if history file path exists:
             if baseline_hist_locs:
-
+                print("DRBDBG going to fail in baseline")
                 starting_location = Path(baseline_hist_locs)
                 files_list = sorted(starting_location.glob('*'+hist_str+'.*.nc'))
                 base_climo_yrs_str = sorted(np.unique([i.stem[-7:-3] for i in files_list]))
@@ -274,46 +288,49 @@ class AdfInfo(AdfConfig):
             eyears_fixed.append(eyear)
 
             #Check if history file path exists:
-
+            hist_str_case = hist_str[case_idx]
+            print(f"DRBDBG for case {case_name} using hist_str {hist_str}")
             if any(cam_hist_locs):
-                #Get climo years for verification or assignment if missing
-                starting_location = Path(cam_hist_locs[case_idx])
-                files_list = sorted(starting_location.glob('*'+hist_str+'.*.nc'))
-                nfiles = len(files_list)
-                #print(f"cam_hist found {nfiles} candidate files in {starting_location}")
-                if (hist_str == "cam.h0"):
-                    char_start = -7
-                    char_end   = -3
-                elif (hist_str == "cam.h2"):
-                    char_start = -16
-                    char_end   = -12
-                else:
-                    char_start = -16
-                    char_end   = -12
-                    print("unknown character placement for {hist_str} type files. Trying {char_start}:{char_end}")
+                for hist_idx, hist_str_file in enumerate(hist_str_case):
+                    print(f"DRBDBG starting hist_str_file {hist_str_file}")
+                    #Get climo years for verification or assignment if missing
+                    starting_location = Path(cam_hist_locs[case_idx])
+                    files_list = sorted(starting_location.glob('*'+hist_str_file+'.*.nc'))
+                    nfiles = len(files_list)
+                    print(f"cam_hist found {nfiles} candidate files in {starting_location}")
+                    if (hist_str_file == "cam.h0"):
+                        char_start = -7
+                        char_end   = -3
+                    elif (hist_str_file == "cam.h2"):
+                        char_start = -16
+                        char_end   = -12
+                    else:
+                        char_start = -16
+                        char_end   = -12
+                        print("unknown character placement for {hist_str_char} type files. Trying {char_start}:{char_end}")
                     
-                case_climo_yrs_str = sorted(np.unique([i.stem[char_start:char_end] for i in files_list]))
-                case_climo_yrs = []
-                for year in case_climo_yrs_str:
-                   case_climo_yrs.append(int(year))
+                    case_climo_yrs_str = sorted(np.unique([i.stem[char_start:char_end] for i in files_list]))
+                    case_climo_yrs = []
+                    for year in case_climo_yrs_str:
+                        case_climo_yrs.append(int(year))
 
-                #Check if start or end year is missing.  If so then just assume it is the
-                #start or end of the entire available model data.
-                if syear is None:
-                    print(f"No given start year for {case_name}, using first found year...")
-                    syear = int(case_climo_yrs[0])
-                elif (syear) not in case_climo_yrs:
-                    print(f"Given start year '{syear}' is not in current dataset {case_name}, using first found year:",case_climo_yrs[0],"\n")
-                    syear = int(case_climo_yrs[0])
-                #End if
-                if eyear is None:
-                    print(f"No given end year for {case_name}, using last found year...")
-                    eyear = int(case_climo_yrs[-1])
-                elif (eyear) not in case_climo_yrs:
-                    print(f"Given end year '{eyear}' is not in current dataset {case_name}, using last found year:",case_climo_yrs[-1],"\n")
-                    eyear = int(case_climo_yrs[-1])
-                #End if
-
+                    #Check if start or end year is missing.  If so then just assume it is the
+                    #start or end of the entire available model data.
+                    if syear is None:
+                        print(f"No given start year for {case_name}, using first found year...")
+                        syear = int(case_climo_yrs[0])
+                    elif (syear) not in case_climo_yrs:
+                        print(f"Given start year '{syear}' is not in current dataset {case_name}, using first found year:",case_climo_yrs[0],"\n")
+                        syear = int(case_climo_yrs[0])
+                    #End if
+                    if eyear is None:
+                        print(f"No given end year for {case_name}, using last found year...")
+                        eyear = int(case_climo_yrs[-1])
+                    elif (eyear) not in case_climo_yrs:
+                        print(f"Given end year '{eyear}' is not in current dataset {case_name}, using last found year:",case_climo_yrs[-1],"\n")
+                        eyear = int(case_climo_yrs[-1])
+                    #End if
+                #end for hist_idx, hist_str_file in enumerate(hist_str):
             else:
                 #History file path isn't needed if user is running ADF directly on time series.
                 #So make sure start and end year are specified:

@@ -402,11 +402,9 @@ class AdfDiag(AdfWeb):
         #End if
 
         #Read hist_str (component.hist_num) from the yaml file, or set to default
-        hist_str = self.get_basic_info('hist_str')
-        #If hist_str is not present, then default to 'cam.h0':
-        if not hist_str:
-            hist_str = 'cam.h0'
-        #End if
+        print(f"DRBDBG 405 adf_diag getting hist_str")
+        hist_str = self.get_cam_info('hist_str')
+        print(f"DRBDBG 405 adf_diag got hist_str {hist_str}")
 
         print(f"from {hist_str} files")
         print(f"\n writing to {ts_dir}")
@@ -989,11 +987,8 @@ class AdfDiag(AdfWeb):
         
         cam_ts_loc   =  self.get_cam_info('cam_ts_loc', required=True)
         cam_ts_loc = self.get_cam_info('cam_ts_loc')
-        hist_str   = self.get_basic_info('hist_str')
-        if not hist_str:
-            hist_str = 'cam.h0'
-            print(f'WARNING: no hist_str found by setup_run_mdtf. Using {hist_str}')
-
+        hist_str   = self.get_cam_info('hist_str')
+        print(f"DRBDBG L989 adf_diag got hist_str {hist_str}")
         self.expand_references({"cam_ts_loc" : cam_ts_loc})
         if verbose>0: print(f'\t Using timeseries files for {hist_str} from {cam_ts_loc[0]}') 
 
