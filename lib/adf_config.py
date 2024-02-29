@@ -65,7 +65,8 @@ class AdfConfig(AdfBase):
         #Create search dictionary for variable expansion:
         self.__search_dict = self.__create_search_dict(self.__config_dict)
 
-        #Create YAML self-reference keyword regex:
+        #Create YAML self-reference keyword reg
+        # ex:
         self.__kword_pattern = re.compile(r'\$\{[a-z_\.\d]+\}')
 
     #########
@@ -94,16 +95,7 @@ class AdfConfig(AdfBase):
                     key = sub_dict+"."+key
                 #Add key/value to search dict:
                 config_search_dict[key] = str(value)
-#"""DRBDBG does this work without this  : YES
-#                if ('hist_str' in key): #Store number of entries in dict
-#                    print(f"DRBDBG found hist_str in {key} of type {type(value)}")
-#                    if not isinstance(value, list):
-#                        value_list = [str(value)]
-#                        value = value_list
-#                    print(f"DRBDBG saving hist str {key} = {value} of type {type(value)}")
-#                    #Add key/value to search dict:
-#                    config_search_dict[key] = value
-#"""
+
                 #Check if value is a dictionary instead:
             elif isinstance(value, dict):
                 #Currently this routine only handles one level of
@@ -272,8 +264,6 @@ class AdfConfig(AdfBase):
         #Check if the config dictionary has been specified:
         if isinstance(conf_dict, dict):
             var_dict = conf_dict
-            if ('hist_str' in varname):
-                print(f"DRBDBG read_config_var looking for {varname} in {var_dict}")
         elif isinstance(conf_dict, type(None)):
             var_dict = self.__config_dict
         else:

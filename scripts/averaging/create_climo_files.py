@@ -65,6 +65,7 @@ def create_climo_files(adf, clobber=False, search=None):
     output_locs   = adf.get_cam_info("cam_climo_loc", required=True)
     calc_climos   = adf.get_cam_info("calc_cam_climo")
     overwrite     = adf.get_cam_info("cam_overwrite_climo")
+    cam_hist_str  = adf.get_cam_info("hist_str")  #nested list [ncases,nhist]
 
     #Extract simulation years:
     start_year = adf.climo_yrs["syears"]
@@ -86,7 +87,14 @@ def create_climo_files(adf, clobber=False, search=None):
         output_bl_loc     = adf.get_baseline_info("cam_climo_loc", required=True)
         calc_bl_climos    = adf.get_baseline_info("calc_cam_climo")
         ovr_bl            = adf.get_baseline_info("cam_overwrite_climo")
+        baseline_hist_str_raw = adf.get_baseline_info("hist_str")
 
+        if(isinstance(baseline_hist_str_raw,list)):
+            baseline_hist_str = baseline_hist_str_raw
+        else:   
+            baseline_hist_str = [baseline_hist_str_raw]
+        hist_str_all = [cam_hist_str,baseline_hist_str]
+        
         #Extract baseline years:
         bl_syr = adf.climo_yrs["syear_baseline"]
         bl_eyr = adf.climo_yrs["eyear_baseline"]
@@ -99,6 +107,9 @@ def create_climo_files(adf, clobber=False, search=None):
         overwrite.append(ovr_bl)
         start_year.append(bl_syr)
         end_year.append(bl_eyr)
+    else: 
+        hist_str_all = cam_hist_str
+
     #-----------------------------------------
 
     # Check whether averaging interval is supplied
@@ -135,48 +146,53 @@ def create_climo_files(adf, clobber=False, search=None):
             print(f"\t    {output_location} not found, making new directory")
             output_location.mkdir(parents=True)
 
+
         #Time series file search
         if search is None:
-            search = "{CASE}*.{VARIABLE}.*nc"  # NOTE: maybe we should not care about the file extension part at all, but check file type later?
+            search = "{CASE}.{HIST_STR}.{VARIABLE}.*nc"  # NOTE: maybe we should not care about the file extension part at all, but check file type later?
 
         #Check model year bounds:
         syr, eyr = check_averaging_interval(start_year[case_idx], end_year[case_idx])
 
-        #Loop over CAM output variables:
-        list_of_arguments = []
-        for var in var_list:
+        #Loop over history file types 
+        hist_str_case = hist_str_all[case_idx]  #still a list
+        for hist_idx, hist_str in enumerate(hist_str_case):            
+            #Loop over CAM output variables:
+            list_of_arguments = []
+            for var in var_list:
 
-            # Create name of climatology output file (which includes the full path)
-            # and check whether it is there (don't do computation if we don't want to overwrite):
-            output_file = output_location / f"{case_name}_{var}_climo.nc"
-            if (not clobber) and (output_file.is_file()):
-                print(f"\t    INFO: Found climo file and clobber is False, so skipping {var} and moving to next variable.")
-                continue
-            elif (clobber) and (output_file.is_file()):
-                print(f"\t    INFO: Climo file exists for {var}, but clobber is {clobber}, so will OVERWRITE it.")
+                # Create name of climatology output file (which includes the full path)
+                # and check whether it is there (don't do computation if we don't want to overwrite):
+                output_file = output_location / f"{case_name}_{var}_climo.nc"
+                if (not clobber) and (output_file.is_file()):
+                    print(f"\t    INFO: Found climo file and clobber is False, so skipping {var} and moving to next variable.")
+                    continue
+                elif (clobber) and (output_file.is_file()):
+                    print(f"\t    INFO: Climo file exists for {var}, but clobber is {clobber}, so will OVERWRITE it.")
 
-            #Create list of time series files present for variable:
-            ts_filenames = search.format(CASE=case_name, VARIABLE=var)
-            ts_files = sorted(list(input_location.glob(ts_filenames)))
+                #Create list of time series files present for variable:
+                ts_filenames = search.format(CASE=case_name, HIST_STR=hist_str, VARIABLE=var)
+                ts_files = sorted(list(input_location.glob(ts_filenames)))
 
-            #If no files exist, try to move to next variable. --> Means we can not proceed with this variable, and it'll be problematic later.
-            if not ts_files:
-                errmsg = "Time series files for variable '{}' not found.  Script will continue to next variable.".format(var)
-                print(f"The input location searched was: {input_location}. The glob pattern was {ts_filenames}.")
-                #  end_diag_script(errmsg) # Previously we would kill the run here.
-                warnings.warn(errmsg)
-                continue
+                #If no files exist, try to move to next variable. --> Means we can not proceed with this variable, and it'll be problematic later.
+                if not ts_files:
+                    errmsg = "Time series files for variable '{}' not found.  Script will continue to next variable.".format(var)
+                    print(f"The input location searched was: {input_location}. The glob pattern was {ts_filenames}.")
+                    #  end_diag_script(errmsg) # Previously we would kill the run here.
+                    warnings.warn(errmsg)
+                    continue
 
-            list_of_arguments.append((ts_files, syr, eyr, output_file))
+                list_of_arguments.append((ts_files, syr, eyr, output_file))
 
 
-        #End of var_list loop
-        #--------------------
+            #End of var_list loop
+            #--------------------
 
-        # Parallelize the computation using multiprocessing pool:
-        with mp.Pool(processes=number_of_cpu) as p:
-            result = p.starmap(process_variable, list_of_arguments)
+            # Parallelize the computation using multiprocessing pool:
+            with mp.Pool(processes=number_of_cpu) as p:
+                result = p.starmap(process_variable, list_of_arguments)
 
+        #End of hist_str loop
     #End of model case loop
     #----------------------
 
