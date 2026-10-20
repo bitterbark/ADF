@@ -189,11 +189,10 @@ class AdfInfo(AdfConfig):
             #Check if any a weights file exists if using native grid, OPTIONAL
             baseline_wgts_file   = None #self.get_baseline_info("weights_file")
             self.__baseline_wgts_file = baseline_wgts_file
+            self.__baseline_cons_wgts_file = None
 
             baseline_regrid_method = None #self.get_baseline_info("regrid_method")
             if baseline_regrid_method == 'conservative':
-                print("user defined 'conservative', " \
-                "but xesmf has a typo, changing to 'coservative'")
                 baseline_regrid_method = 'coservative'
             self.__baseline_regrid_method = baseline_regrid_method
         else:
@@ -234,9 +233,12 @@ class AdfInfo(AdfConfig):
             baseline_wgts_file   = self.get_baseline_info("weights_file")
             self.__baseline_wgts_file = baseline_wgts_file
 
+            #Conservative weights file for the variables in "regrid_conservative_vars", OPTIONAL
+            self.__baseline_cons_wgts_file = self.get_baseline_info("conservative_weights_file")
+
             baseline_regrid_method = self.get_baseline_info("regrid_method")
             if baseline_regrid_method == 'conservative':
-                print("user defined 'conservative', but xesmf has a typo, changing to 'coservative'")
+                # ADF passes conservative as 'coservative' (see adf_utils.make_se_regridder):
                 baseline_regrid_method = 'coservative'
             self.__baseline_regrid_method = baseline_regrid_method
 
@@ -489,21 +491,29 @@ class AdfInfo(AdfConfig):
             cam_wgts_files = [None]*len(case_names)
         self.__cam_wgts_files = cam_wgts_files
 
+        #Conservative weights file for the variables in "regrid_conservative_vars", OPTIONAL
+        cam_cons_wgts_files = self.get_cam_info("conservative_weights_file")
+        if cam_cons_wgts_files is None:
+            cam_cons_wgts_files = [None]*len(case_names)
+        self.__cam_cons_wgts_files = cam_cons_wgts_files
+
+        # ADF passes conservative as 'coservative' (see adf_utils.make_se_regridder):
         cam_regrid_method = self.get_cam_info("regrid_method")
         if cam_regrid_method:
             cam_regrid_methods = []
             for regr_method in cam_regrid_method:
-                if regr_method == 'conservative':
-                    print("user defined 'conservative', " \
-                    "but xesmf has a typo, changing to 'coservative'")
-                    cam_regrid_methods.append('coservative')
-                if regr_method is None:
+                if regr_method in ('conservative', None):
                     cam_regrid_methods.append('coservative')
                 else:
                     cam_regrid_methods.append(regr_method)
+            cam_regrid_method = cam_regrid_methods
         if cam_regrid_method is None:
             cam_regrid_method = [None]*len(case_names)
         self.__cam_regrid_method = cam_regrid_method
+
+        #Variables to regrid with "conservative_weights_file" instead of "weights_file"
+        #(fluxes such as precipitation and radiation), OPTIONAL:
+        self.__regrid_conservative_vars = self.read_config_var('regrid_conservative_vars') or []
 
         #Grab case time series file location(s)
         input_ts_locs = self.get_cam_info("cam_ts_loc", required=True)
@@ -895,8 +905,18 @@ class AdfInfo(AdfConfig):
         #modify these variables, as they are mutable and thus passed by reference:
         cam_wgts_files = copy.copy(self.__cam_wgts_files)
         baseline_wgts_file = self.__baseline_wgts_file
+        cam_cons_wgts_files = copy.copy(self.__cam_cons_wgts_files)
+        baseline_cons_wgts_file = self.__baseline_cons_wgts_file
 
-        return {"test_wgts_file":cam_wgts_files,"baseline_wgts_file":baseline_wgts_file}
+        return {"test_wgts_file":cam_wgts_files,"baseline_wgts_file":baseline_wgts_file,
+                "test_cons_wgts_file":cam_cons_wgts_files,
+                "baseline_cons_wgts_file":baseline_cons_wgts_file}
+
+    # Create property needed to return the conservatively regridded variables to user:
+    @property
+    def regrid_conservative_vars(self):
+        """Return a copy of the "regrid_conservative_vars" list to the user if requested."""
+        return copy.copy(self.__regrid_conservative_vars)
 
     # Create property needed to return the lat/lon regrid method to user:
     @property

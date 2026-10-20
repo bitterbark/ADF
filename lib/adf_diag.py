@@ -965,6 +965,20 @@ class AdfDiag(AdfWeb):
                         latlon_file   = self.latlon_files["test_latlon_file"][case_idx]
                         wgts_file   = self.latlon_wgt_files["test_wgts_file"][case_idx]
                         method = self.latlon_regrid_method["test_regrid_method"][case_idx]
+
+                    # Fluxes (e.g. precipitation, radiation) can use a separate conservative map:
+                    if var in self.regrid_conservative_vars:
+                        if case_type_string == "baseline":
+                            cons_wgts_file = self.latlon_wgt_files["baseline_cons_wgts_file"]
+                        else:
+                            cons_wgts_file = self.latlon_wgt_files["test_cons_wgts_file"][case_idx]
+                        if cons_wgts_file:
+                            wgts_file = cons_wgts_file
+                            method = 'coservative'
+                        else:
+                            print(f"\t    WARNING: '{var}' is in regrid_conservative_vars, but no"
+                                  " conservative_weights_file is set. Using weights_file.")
+                    print(f"\t    INFO: regridding '{var}' with {wgts_file} (method '{method}')")
                     if not latlon_file:
                         msg = "WARNING: This looks like an unstructured case, but missing lat/lon file"
                         print(msg)

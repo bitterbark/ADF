@@ -998,8 +998,10 @@ def make_se_regridder(weight_file, s_data, d_data,
         dummy_in,
         dummy_out,
         weights=weight_file,
-        # results seem insensitive to this method choice
-        # choices are coservative_normed, coservative, and bilinear
+        # The weights come from weight_file, so xesmf uses the method only to decide
+        # whether it needs cell bounds ('conservative' and 'conservative_normed' do).
+        # The dummy grids above have no bounds, so ADF passes conservative maps as
+        # 'coservative', which xesmf does not recognize as needing them.
         method=Method,
         reuse_weights=True,
         periodic=True,
@@ -1089,6 +1091,10 @@ def grid_to_latlon(model_dataset, var_name, comp, wgt_file, method, latlon_file,
         s_data = None #model_dataset[var_name].isel(time=0)
         d_data = None #latlon_ds.PSL.isel(time=0)
 
+    # Users write 'conservative'; see make_se_regridder for why it is passed as 'coservative':
+    if method == 'conservative':
+        method = 'coservative'
+
     #Grid model data to match target grid lat/lon:
     regridder = make_se_regridder(weight_file=wgt_file,
                                     s_data = s_data,
@@ -1100,8 +1106,11 @@ def grid_to_latlon(model_dataset, var_name, comp, wgt_file, method, latlon_file,
 
     if method == 'coservative':
         rgdata = regrid_se_data_conservative(regridder, model_dataset, comp_grid)
-    if method == 'bilinear':
+    elif method == 'bilinear':
         rgdata = regrid_se_data_bilinear(regridder, model_dataset, comp_grid)
+    else:
+        raise ValueError(f"grid_to_latlon: unknown regrid method '{method}',"
+                         " use 'coservative' (conservative) or 'bilinear'")
     if comp == "lnd":
         rgdata[var_name] = (rgdata[var_name] / rgdata.landfrac)
         rgdata['landmask'] = latlon_ds.landmask
