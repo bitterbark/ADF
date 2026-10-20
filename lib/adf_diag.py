@@ -1017,9 +1017,14 @@ class AdfDiag(AdfWeb):
 
                     # Limit dask threads: memory use is about (threads x chunk size),
                     # and the default (one per core) is ~128 threads on a full node.
+                    # Write to a temporary file and rename it at the end, so a job killed
+                    # mid-write (e.g. walltime) doesn't leave a partial file that a rerun
+                    # would take as finished:
+                    temp_gridded_output = str(tgridded_output) + ".tmp"
                     with dask.config.set(scheduler="threads", num_workers=4):
-                        save_to_nc(tgdata_interp, tgridded_output)
+                        save_to_nc(tgdata_interp, temp_gridded_output)
                     ts_file_ds.close()
+                    os.replace(temp_gridded_output, tgridded_output)
                     # End for
                 # End if check for native grid
             # End for hist_str
