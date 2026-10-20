@@ -1107,11 +1107,37 @@ def grid_to_latlon(model_dataset, var_name, comp, wgt_file, method, latlon_file,
         rgdata['landmask'] = latlon_ds.landmask
         rgdata['landfrac'] = rgdata.landfrac.isel(time=0)
 
+    # xesmf returns float64 and drops variable attributes (units, long_name, ...);
+    # restore both so the gridded file matches the native one and is not twice as big:
+    for v in rgdata.data_vars:
+        if v in model_dataset:
+            rgdata[v] = rgdata[v].astype(model_dataset[v].dtype)
+            rgdata[v].attrs = model_dataset[v].attrs
+
+    # xesmf also drops variables without the column dimension
+    # (time_bounds, date, datesec, hyai, hybi, ...), so carry them over:
+    for v in model_dataset.data_vars:
+        if v not in rgdata and comp_grid not in model_dataset[v].dims:
+            rgdata[v] = model_dataset[v]
+
     # calculate area
     rgdata = calc_area(rgdata)
 
     #Return dataset:
     return rgdata
+
+
+def ts_time_chunk(ds, var_name, target_bytes=256e6):
+    """
+    Number of time steps per dask chunk so that one chunk of
+    ds[var_name] is about target_bytes. Used to regrid long, high
+    frequency time series a piece at a time instead of all at once.
+    """
+    da = ds[var_name]
+    if "time" not in da.dims:
+        return None
+    bytes_per_step = da.dtype.itemsize * (da.size // da.sizes["time"])
+    return max(1, int(target_bytes // bytes_per_step))
 
 
 def calc_area(rgdata):

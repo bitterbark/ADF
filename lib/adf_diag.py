@@ -45,6 +45,14 @@ except ImportError:
     print("Please install module, e.g. 'pip install xarray'.")
     sys.exit(1)
 
+# Check if "dask" is present in python path:
+try:
+    import dask
+except ImportError:
+    print("Dask module does not exist in python path.")
+    print("Please install module, e.g. 'pip install dask'.")
+    sys.exit(1)
+
 # Check if "numpy" is present in python path:
 try:
     import numpy as np
@@ -840,6 +848,8 @@ class AdfDiag(AdfWeb):
 
                     fil = fils[0]
                     ts_ds = xr.open_dataset(fil, decode_times=False)
+                    # Rewrite in time chunks so big files are not loaded into memory whole:
+                    ts_ds = ts_ds.chunk({"time": utils.ts_time_chunk(ts_ds, var)})
 
                     units = ts_ds[var].attrs.get("units", "--")
                     if ('time_bnds' in ts_ds) or ('time_bounds' in ts_ds):
@@ -897,7 +907,9 @@ class AdfDiag(AdfWeb):
 
                         # Save to a temporary file
                         temp_file_path = fil + ".tmp"
-                        ts_ds_fixed.to_netcdf(temp_file_path)
+                        with dask.config.set(scheduler="threads", num_workers=4):
+                            ts_ds_fixed.to_netcdf(temp_file_path)
+                        ts_ds.close()
                         # Replace the original file with the modified file
                         os.replace(temp_file_path, fil)
 
@@ -929,10 +941,17 @@ class AdfDiag(AdfWeb):
                         print(msg)
                         continue
 
-                    ts_file_ds = xr.open_dataset(f)
                     #var = fils = glob.glob(f"{ts_dir}/*{time_string}.nc")
 
                     var = str(f).split(f'{hist_str}.')[1].split('.')[0]
+
+                    # Open lazily in time chunks so that big time series files
+                    # (TBs for multi-year 1-hourly 3D fields) are regridded and
+                    # written a chunk at a time instead of loaded into memory whole.
+                    # Times are left undecoded so time/time_bounds are written back
+                    # unchanged (decoded times lose their units/calendar encoding):
+                    ts_file_ds = xr.open_dataset(f, decode_times=False)
+                    ts_file_ds = ts_file_ds.chunk({"time": utils.ts_time_chunk(ts_file_ds, var)})
 
                     #Check if any a FV file exists if using native grid
                     if case_type_string == "baseline":
@@ -972,7 +991,11 @@ class AdfDiag(AdfWeb):
                         tgdata_interp['hybm'] = ts_file_ds.hybm
                         tgdata_interp['hyam'] = ts_file_ds.hyam
 
-                    save_to_nc(tgdata_interp, tgridded_output)
+                    # Limit dask threads: memory use is about (threads x chunk size),
+                    # and the default (one per core) is ~128 threads on a full node.
+                    with dask.config.set(scheduler="threads", num_workers=4):
+                        save_to_nc(tgdata_interp, tgridded_output)
+                    ts_file_ds.close()
                     # End for
                 # End if check for native grid
             # End for hist_str
