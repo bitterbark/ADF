@@ -713,10 +713,11 @@ class AdfDiag(AdfWeb):
                     # Variable list starts with just the variable
                     ncrcat_var_list = f"{var},lat,lon"
 
-                    # Determine "ncrcat" command to generate time series file:
-                    if "date" in hist_file_ds[var].dims:
+                    # Determine "ncrcat" command to generate time series file
+                    # (date and datesec are variables of their own, not dimensions of var):
+                    if "date" in hist_file_ds:
                         ncrcat_var_list = ncrcat_var_list + ",date"
-                    if "datesec" in hist_file_ds[var].dims:
+                    if "datesec" in hist_file_ds:
                         ncrcat_var_list = ncrcat_var_list + ",datesec"
 
                     if has_lev and vert_coord_type:
@@ -928,9 +929,15 @@ class AdfDiag(AdfWeb):
                 tgridded_output_loc   = Path(ts_dir) / "gridded"
                 if not tgridded_output_loc.is_dir():
                     print(f"    {tgridded_output_loc} not found, making new directory")
-                    tgridded_output_loc.mkdir(parents=True)
+                    # exist_ok: another ADF job may share this directory
+                    tgridded_output_loc.mkdir(parents=True, exist_ok=True)
 
-                for f in sorted(Path(ts_dir).glob("*.nc")):
+                # Only this run's files: other ADF jobs (other variables or years) may be
+                # writing time series into the same directory at the same time.
+                ts_files = []
+                for var in diag_var_list:
+                    ts_files += glob.glob(f"{ts_dir}/*.{hist_str}.{var}.{time_string}.nc")
+                for f in sorted(ts_files):
                     #print("native (hopefully) file",f)
                     ts_outfil_str = Path(f'{str(f).replace(".nc", "_gridded.nc")}')
                     ts_outfil_grid = ts_outfil_str.name
