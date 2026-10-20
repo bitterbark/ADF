@@ -711,7 +711,8 @@ class AdfDiag(AdfWeb):
                             continue
 
                     # Variable list starts with just the variable
-                    ncrcat_var_list = f"{var},lat,lon"
+                    # (zonal-mean streams have no lon, and ncrcat fails on a missing variable)
+                    ncrcat_var_list = ",".join([var] + [c for c in ("lat", "lon") if c in hist_file_ds])
 
                     # Determine "ncrcat" command to generate time series file
                     # (date and datesec are variables of their own, not dimensions of var):
@@ -879,7 +880,8 @@ class AdfDiag(AdfWeb):
                             # Optional, add additional variables to cam.h0* files
                             if "h0" in hist_str:
                                 ds = xr.open_dataset(hist_files[0], decode_times=False)
-                                if unstruct_plotting:
+                                # Lat-lon h0 files (e.g. CAM-interpolated output) have no areawt:
+                                if unstruct_plotting and "areawt" in ds:
                                     ts_ds['area'] = ds.areawt
                         if comp == "lnd":
                             # need greater flexibility given changes in clm history files over time
