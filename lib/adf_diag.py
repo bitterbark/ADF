@@ -753,8 +753,11 @@ class AdfDiag(AdfWeb):
                         # End if cam
                     # End if has_lev
 
+                    # One chunk per time step holding the whole field (--cnk_map=rd1):
+                    # NCO's default chunks pad uneven edges, ~1.6x the data size on ne30pg3.
                     cmd = (
-                        ["ncrcat", "-O", "-4", "-h", "--no_cll_mth", "-v", ncrcat_var_list]
+                        ["ncrcat", "-O", "-4", "-h", "--no_cll_mth", "--cnk_map=rd1",
+                         "-v", ncrcat_var_list]
                         + hist_files
                         + ["-o", ts_outfil_str]
                     )
