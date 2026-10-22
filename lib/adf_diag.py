@@ -53,6 +53,14 @@ except ImportError:
     print("Please install module, e.g. 'pip install dask'.")
     sys.exit(1)
 
+# Check if "netCDF4" is present in python path:
+try:
+    import netCDF4
+except ImportError:
+    print("netCDF4 module does not exist in python path.")
+    print("Please install module, e.g. 'pip install netCDF4'.")
+    sys.exit(1)
+
 # Check if "numpy" is present in python path:
 try:
     import numpy as np
@@ -163,6 +171,24 @@ def construct_index_info(page_dict, fnam, opf):
     if plot_type not in page_dict[vname]:
         page_dict[vname][plot_type] = {}
     page_dict[vname][plot_type][temporal] = opf
+
+
+def add_global_attrs(args):
+    """
+    Add global attributes to a time series file, for use with the
+    multiprocessing Pool in `create_time_series`.
+
+    Uses netCDF4 rather than ncatted: the list of history files for a
+    multi-year run can exceed the OS limit on a single command-line
+    argument (128 KiB).
+
+    args: tuple of (time series file path, dict of attribute names and values)
+    """
+    ts_file, attrs = args
+    # netCDF4 is a C extension, so pylint can't see its members:
+    # pylint: disable=no-member
+    with netCDF4.Dataset(ts_file, "a") as ts_nc:
+        ts_nc.setncatts(attrs)
 
 
 ######################################
@@ -764,23 +790,17 @@ class AdfDiag(AdfWeb):
                         + ["-o", ts_outfil_str]
                     )
 
-                    # Example ncatted command
-                    # (you can modify it with the specific attribute changes you need)
-                    # cmd_ncatted = ["ncatted", "-O", "-a", "f" adf_user,global,a,c,{self.user}",
-                    #                ts_outfil_str]
                     # Step 1: Convert Path objects to strings and concatenate the list of
                     #  historical files into a single string
                     hist_files_str = ', '.join(str(f.name) for f in hist_files)
                     hist_locs_str = ', '.join(str(loc) for loc in cam_hist_locs)
 
-                    # Step 2: Create the ncatted command to add both global attributes
-                    cmd_ncatted = [
-                        "ncatted", "-O",
-                        "-a", "adf_user,global,a,c," + f"{self.user}",
-                        "-a", "hist_file_locs,global,a,c," + f"{hist_locs_str}",
-                        "-a", "hist_file_list,global,a,c," + f"{hist_files_str}",
-                        ts_outfil_str
-                    ]
+                    # Step 2: Global attributes to add (with netCDF4, see add_global_attrs)
+                    global_attrs = (ts_outfil_str, {
+                        "adf_user": f"{self.user}",
+                        "hist_file_locs": hist_locs_str,
+                        "hist_file_list": hist_files_str,
+                    })
 
                     if "clm" in hist_str:
                         # Step 3b: Optional, add additional variables to clm2.h1 files
@@ -807,7 +827,7 @@ class AdfDiag(AdfWeb):
                     # generate time series files
                     list_of_commands.append(cmd)
                     # Add global attributes: user, original hist file loc(s) and all filenames
-                    list_of_ncattend_commands.append(cmd_ncatted)
+                    list_of_ncattend_commands.append(global_attrs)
 
                     # Remove the `history` attr that gets tacked on (for clean up)
                     # NOTE: this may not be best practice, but if the history attr repeats
@@ -821,9 +841,9 @@ class AdfDiag(AdfWeb):
                     _ = mpool.map(call_ncrcat, list_of_commands)
                 # End with
 
-                # Run ncatted commands after ncrcat is done
+                # Add global attributes after ncrcat is done
                 with mp.Pool(processes=self.num_procs) as mpool:
-                    _ = mpool.map(call_ncrcat, list_of_ncattend_commands)
+                    _ = mpool.map(add_global_attrs, list_of_ncattend_commands)
 
                 # Run ncatted command to remove history attribute after
                 # the global attributes are set
