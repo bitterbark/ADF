@@ -933,7 +933,8 @@ class AdfDiag(AdfWeb):
 
                         # Save to a temporary file
                         temp_file_path = fil + ".tmp"
-                        with dask.config.set(scheduler="threads", num_workers=4):
+                        # Single-threaded: threaded to_netcdf has hung intermittently
+                        with dask.config.set(scheduler="synchronous"):
                             ts_ds_fixed.to_netcdf(temp_file_path)
                         ts_ds.close()
                         # Replace the original file with the modified file
@@ -1037,13 +1038,13 @@ class AdfDiag(AdfWeb):
                         tgdata_interp['hybm'] = ts_file_ds.hybm
                         tgdata_interp['hyam'] = ts_file_ds.hyam
 
-                    # Limit dask threads: memory use is about (threads x chunk size),
-                    # and the default (one per core) is ~128 threads on a full node.
+                    # Use the synchronous (single-threaded) scheduler: threaded writes hung
+                    # intermittently, even with 4 threads. It also holds one chunk at a time.
                     # Write to a temporary file and rename it at the end, so a job killed
                     # mid-write (e.g. walltime) doesn't leave a partial file that a rerun
                     # would take as finished:
                     temp_gridded_output = str(tgridded_output) + ".tmp"
-                    with dask.config.set(scheduler="threads", num_workers=4):
+                    with dask.config.set(scheduler="synchronous"):
                         save_to_nc(tgdata_interp, temp_gridded_output)
                     ts_file_ds.close()
                     os.replace(temp_gridded_output, tgridded_output)
