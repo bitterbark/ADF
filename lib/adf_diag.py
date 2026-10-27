@@ -18,6 +18,7 @@ import glob
 import subprocess
 import multiprocessing as mp
 import copy
+import functools
 
 import importlib
 import shutil
@@ -931,14 +932,9 @@ class AdfDiag(AdfWeb):
                         }
                         ts_ds_fixed = ts_ds_fixed.assign_attrs(attrs_dict)
 
-                        # Save to a temporary file
-                        temp_file_path = fil + ".tmp"
-                        # Single-threaded: threaded to_netcdf has hung intermittently
-                        with dask.config.set(scheduler="synchronous"):
-                            ts_ds_fixed.to_netcdf(temp_file_path)
-                        ts_ds.close()
                         # Replace the original file with the modified file
-                        os.replace(temp_file_path, fil)
+                        write_netcdf_synchronous(ts_ds_fixed.to_netcdf, fil)
+                        ts_ds.close()
 
                 if vars_to_derive:
                     self.derive_variables(
@@ -1038,16 +1034,9 @@ class AdfDiag(AdfWeb):
                         tgdata_interp['hybm'] = ts_file_ds.hybm
                         tgdata_interp['hyam'] = ts_file_ds.hyam
 
-                    # Use the synchronous (single-threaded) scheduler: threaded writes hung
-                    # intermittently, even with 4 threads. It also holds one chunk at a time.
-                    # Write to a temporary file and rename it at the end, so a job killed
-                    # mid-write (e.g. walltime) doesn't leave a partial file that a rerun
-                    # would take as finished:
-                    temp_gridded_output = str(tgridded_output) + ".tmp"
-                    with dask.config.set(scheduler="synchronous"):
-                        save_to_nc(tgdata_interp, temp_gridded_output)
+                    write_netcdf_synchronous(functools.partial(save_to_nc, tgdata_interp),
+                                             tgridded_output)
                     ts_file_ds.close()
-                    os.replace(temp_gridded_output, tgridded_output)
                     # End for
                 # End if check for native grid
             # End for hist_str
@@ -1845,6 +1834,28 @@ def save_to_nc(tosave, outname, attrs=None, proc=None):
     if proc is not None:
         xo.attrs['Processing_info'] = f"Start from file {origname}. " + proc
     xo.to_netcdf(outname, format='NETCDF4', encoding=enc)
+
+def write_netcdf_synchronous(writer, outname):
+    """Write a netCDF file with dask's synchronous scheduler, via a temporary file.
+
+    writer(path) writes the file; it is called with outname + ".tmp", which is
+    renamed to outname only after the write succeeds. A job killed mid-write
+    (e.g. walltime) therefore never leaves a partial file that a rerun would
+    take as finished, and a failed write removes its temporary file.
+
+    The synchronous (single-threaded) scheduler is used because threaded
+    to_netcdf writes hung intermittently, even with 4 threads. It also holds
+    only one chunk in memory at a time.
+    """
+    temp_name = str(outname) + ".tmp"
+    try:
+        with dask.config.set(scheduler="synchronous"):
+            writer(temp_name)
+    except BaseException:
+        if os.path.exists(temp_name):
+            os.remove(temp_name)
+        raise
+    os.replace(temp_name, outname)
 
 #####
 ########
