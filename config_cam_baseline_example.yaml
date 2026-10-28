@@ -121,6 +121,15 @@ diag_basic_info:
     #If set to false, then if a plot is found it will be skipped:
     redo_plot: false
 
+    #How to handle cases whose history files are on an unstructured grid (dimension
+    #"ncol" or "lndgrid"; ADF detects this from the first history file):
+    #If false or missing, ADF keeps the native time series files and also remaps each one
+    #to lat-lon, written as <cam_ts_loc>/gridded/<file>_gridded.nc (this needs
+    #"weights_file" and "regrid_method" in the case sections below).
+    #If true, only the native time series are made, and plots are drawn on the native grid
+    #(this needs "mesh_file" in the case sections below).
+    #unstructured_plotting: false
+
 #This second set of variables provides info for the CAM simulation(s) being diagnosed:
 diag_cam_climo:
 
@@ -181,6 +190,32 @@ diag_cam_climo:
 
     #Location where time series files are (or will be) stored:
     cam_ts_loc: /glade/derecho/scratch/${user}/ADF/${diag_cam_climo.cam_case_name}/ts
+
+    #Unstructured-grid (e.g. SE ne30pg3) settings. These only matter if the history files
+    #are on an unstructured grid (see "unstructured_plotting" above). All of them can also
+    #be set in "diag_cam_baseline_climo".
+
+    #Map file (ESMF or TempestRemap weights) from the native grid to the lat-lon grid, used
+    #when time series are remapped (unstructured_plotting false). Without it, ADF prints a
+    #warning and skips the remap:
+    #weights_file: /glade/campaign/cesm/cesmdata/inputdata/cpl/gridmaps/ne30pg3/map_ne30pg3_TO_fv0.9x1.25_blin.240826.nc
+
+    #Method that "weights_file" was made with: "bilinear" or "conservative".
+    #Set it whenever "weights_file" is set; the remap fails without it:
+    #regrid_method: bilinear
+
+    #A file on the target lat-lon grid. Land (lndgrid) remapping reads its "landmask";
+    #atmosphere remapping does not need it, and prints a warning if it is missing:
+    #latlon_file: /some/path/to/a/lat-lon/history/file.nc
+
+    #Conservative map for the variables in "regrid_conservative_vars" (see diag_var_list below).
+    #Those variables are regridded conservatively with this map; all other variables use
+    #"weights_file" and "regrid_method". If missing, the listed variables also use "weights_file":
+    #conservative_weights_file: /glade/campaign/cesm/cesmdata/inputdata/cpl/gridmaps/ne30pg3/map_ne30pg3_TO_fv0.9x1.25_aave.240826.nc
+
+    #Grid description (mesh) file for the native grid, read with uxarray to plot on the
+    #native grid and to compute the AMWG table (unstructured_plotting true):
+    #mesh_file: /glade/campaign/cesm/cesmdata/inputdata/share/meshes/ne30pg3_ESMFmesh_cdf5_c20211018.nc
 
     #TEM diagnostics
     #---------------
@@ -343,6 +378,9 @@ diag_cam_baseline_climo:
     #Location where time series files are (or will be) stored:
     cam_ts_loc: /glade/derecho/scratch/${user}/ADF/${diag_cam_baseline_climo.cam_case_name}/ts
 
+    #Unstructured-grid settings for the baseline: weights_file, regrid_method, latlon_file,
+    #conservative_weights_file and mesh_file work as described in "diag_cam_climo" above.
+
     #TEM diagnostics
     #---------------
     #TEM history file number
@@ -489,6 +527,12 @@ plotting_scripts:
 
 #List of CAM variables that will be processesd:
 #If CVDP is to be run PSL, TREFHT, TS and PRECT (or PRECC and PRECL) should be listed
+
+#Variables to regrid with "conservative_weights_file" instead of "weights_file" when
+#unstructured time series are remapped to lat-lon. Conservative remapping preserves area
+#means, so list fluxes here (precipitation, radiation, surface fluxes). OPTIONAL:
+#regrid_conservative_vars: [PRECC, PRECL, PRECT, FLUT, FSNT, LHFLX, SHFLX]
+
 diag_var_list:
     - SWCF
     - LWCF
