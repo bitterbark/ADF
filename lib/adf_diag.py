@@ -480,8 +480,9 @@ class AdfDiag(AdfWeb):
             hist_str_case = hist_str_list[case_idx]
             for hist_str in hist_str_case:
 
-                print(f"\t Processing time series for {case_type_string} case  \
-                      '{case_name}', {hist_str} files:")
+                msg = f"\t Processing time series for {case_type_string} case "
+                msg += f"'{case_name}', {hist_str} files:"
+                print(msg)
                 if not list(starting_location.glob("*" + hist_str + ".*.nc")):
                     emsg = (
                         f"No history *{hist_str}.*.nc files found in '{starting_location}'."
@@ -491,7 +492,7 @@ class AdfDiag(AdfWeb):
                 # End if
 
                 # Notify user that script has started:
-                print(f"\n\t Writing time series files to:\n\t{ts_dir}")
+                print(f"\n\t Writing time series files to:\n\t\t{ts_dir}\n")
 
                 # Create empty list:
                 files_list = []
@@ -947,10 +948,11 @@ class AdfDiag(AdfWeb):
             if self.native_grid[case_name] and not unstruct_plotting:
                 tgridded_output_loc   = Path(ts_dir) / "gridded"
                 if not tgridded_output_loc.is_dir():
-                    print(f"    {tgridded_output_loc} not found, making new directory")
+                    print(f"\n\t {tgridded_output_loc} not found, making new directory")
                     # exist_ok: another ADF job may share this directory
                     tgridded_output_loc.mkdir(parents=True, exist_ok=True)
-
+                    
+                    
                 # Only this run's files: other ADF jobs (other variables or years) may be
                 # writing time series into the same directory at the same time.
                 ts_files = []

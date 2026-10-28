@@ -115,11 +115,11 @@ def polar_map(adfobj):
     # -- So check for it, and default to png
     basic_info_dict = adfobj.read_config_var("diag_basic_info")
     plot_type = basic_info_dict.get('plot_type', 'png')
-    print(f"\t NOTE: Plot type is set to {plot_type}")
+    #print(f"\t NOTE: Plot type is set to {plot_type}")
 
     # check if existing plots need to be redone
     redo_plot = adfobj.get_basic_info('redo_plot')
-    print(f"\t NOTE: redo_plot is set to {redo_plot}")
+    #print(f"\t NOTE: redo_plot is set to {redo_plot}")
     #-----------------------------------------
 
 
@@ -223,20 +223,21 @@ def polar_map(adfobj):
         if unstruct_plotting:
             kwargs["mesh_file"] = adfobj.mesh_files["baseline_mesh_file"]
             unstruct_base = True
+            if comp == "lnd":
+                if adfobj.native_grid[case_name] and not adfobj.unstructured_plotting:
+                    area = odataset.area.isel(time=0)
+                    landfrac = odataset.landfrac.isel(time=0)
+                    # calculate weights
+                    wgt_base = area * landfrac / (area * landfrac).sum()
+            if comp == "atm":
+                if adfobj.native_grid[case_name]:# and not adfobj.unstructured_plotting:
+                    wgt_base = odataset.isel(time=0)[var]
+
         odataset = adfobj.data.load_reference_regrid_dataset(base_name, var, **kwargs)
         odata = adfobj.data.load_reference_regrid_da(base_name, var, **kwargs)
         if odataset is None:
             print(f"\t    WARNING: No reference data found for {var}")
             continue
-        if comp == "lnd":
-            if adfobj.native_grid[case_name] and not adfobj.unstructured_plotting:
-                area = odataset.area.isel(time=0)
-                landfrac = odataset.landfrac.isel(time=0)
-                # calculate weights
-                wgt_base = area * landfrac / (area * landfrac).sum()
-        if comp == "atm":
-            if adfobj.native_grid[case_name]:# and not adfobj.unstructured_plotting:
-                wgt_base = odataset.isel(time=0)[var]
 
         # Process each case
         for plot in plot_info:

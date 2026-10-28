@@ -173,9 +173,7 @@ def spatial_average(indata, weights=None, spatial_dims=None):
     import xarray as xr
     import warnings
 
-    # -----------------------------
-    # 1. Detect spatial dimensions
-    # -----------------------------
+    # Detect spatial dimensions
     if spatial_dims is None:
         dims = list(indata.dims)
 
@@ -192,23 +190,17 @@ def spatial_average(indata, weights=None, spatial_dims=None):
     if not spatial_dims:
         raise ValueError("No spatial dimensions found for averaging")
 
-    # -----------------------------
-    # 2. Build weights if needed
-    # -----------------------------
+    # Build weights if needed
     if weights is None:
-        # Case 1: area weights (best for unstructured)
+        # area weights for unstructured grids
         if 'area' in indata.coords:
             weights = indata['area']
-
         elif 'area' in indata:
             weights = indata['area']
-
-        # Case 2: lat/lon cosine weights
-        #elif 'lat' in indata.coords:
+        # lat/lon cosine weights
         elif 'lat' in indata.dims:
             weights = np.cos(np.deg2rad(indata['lat']))
-
-        # Case 3: fallback
+        # fallback
         else:
             warnings.warn("Using equal weights")
             #weights = xr.ones_like(indata.isel({spatial_dims[0]: 0}))
@@ -220,17 +212,13 @@ def spatial_average(indata, weights=None, spatial_dims=None):
                         "No valid weights provided. For unstructured grids, pass 'area'."
                     )
 
-    # -----------------------------
-    # 3. Normalize weights (optional but safer)
-    # -----------------------------
+    # Normalize weights (optional but safer)
     try:
         weights = weights / weights.sum()
     except Exception:
         pass  # e.g., lat weights (broadcasted later)
 
-    # -----------------------------
-    # 4. Weighted average
-    # -----------------------------
+    # Weighted average
     return indata.weighted(weights).mean(dim=spatial_dims, keep_attrs=True)
 
 
@@ -1079,6 +1067,7 @@ def grid_to_latlon(model_dataset, var_name, comp, wgt_file, method, latlon_file,
 
     model_dataset[var_name] = model_dataset[var_name].fillna(0)
     #model_da = model_da.fillna(0)
+    da_attrs = model_dataset[var_name].attrs
 
     if comp == "lnd":
         model_dataset['landfrac'] = model_dataset['landfrac'].fillna(0)
@@ -1131,6 +1120,7 @@ def grid_to_latlon(model_dataset, var_name, comp, wgt_file, method, latlon_file,
 
     # calculate area
     rgdata = calc_area(rgdata)
+    rgdata[var_name].attrs = da_attrs
 
     #Return dataset:
     return rgdata
